@@ -1,0 +1,75 @@
+automotive-commerce-backend/
+├── config/                  # Configuration files (e.g., database, environment variables)
+│   ├── db.js               # Database connection setup
+│   └── auth.js             # Authentication configuration (e.g., JWT secret)
+├── controllers/            # Route handlers
+│   ├── authController.js    # Authentication logic (login, register, forgot password)
+│   ├── productController.js # Product-related logic (CRUD operations)
+│   ├── cartController.js    # Cart-related logic (add/remove items)
+│   ├── orderController.js   # Order-related logic (create, track orders)
+│   ├── reviewController.js  # Review-related logic (add, fetch reviews)
+│   └── adminController.js   # Admin-related logic (manage users, roles)
+├── middleware/              # Custom middleware
+│   ├── authMiddleware.js   # Authentication and authorization checks
+│   └── errorHandler.js     # Global error handling
+├── models/                  # Database models (Mongoose/SQL)
+│   ├── User.js             # User model
+│   ├── Product.js          # Product model
+│   ├── Order.js            # Order model
+│   └── Review.js           # Review model
+├── routes/                  # API routes
+│   ├── authRoutes.js        # Authentication routes
+│   ├── productRoutes.js     # Product routes
+│   ├── cartRoutes.js        # Cart routes
+│   ├── orderRoutes.js       # Order routes
+│   ├── reviewRoutes.js      # Review routes
+│   └── adminRoutes.js       # Admin routes
+├── services/                # Business logic (optional, for complex apps)
+│   ├── authService.js       # Authentication logic
+│   ├── productService.js    # Product logic
+│   └── orderService.js      # Order logic
+├── utils/                   # Utility functions
+│   ├── email.js            # Email sending utility (e.g., password recovery)
+│   ├── validators.js       # Input validation functions
+│   └── logger.js           # Logging utility
+├── .env                     # Environment variables
+├── app.js                   # Main app entry point (Express setup)
+├── server.js                # Server startup script
+└── package.json             # Project dependencies
+
+
+
+automotive-commerce-app/
+├── assets/                  # Static assets (images, fonts, icons)
+│   ├── images/
+│   └── fonts/
+├── components/              # Reusable UI components
+│   ├── common/              # Generic components (e.g., buttons, headers)
+│   ├── auth/                # Authentication-related components (e.g., login form)
+│   ├── products/            # Product-related components (e.g., ProductCard)
+│   ├── cart/                # Cart-related components (e.g., CartItem)
+│   └── reviews/             # Review-related components (e.g., ReviewCard)
+├── constants/               # Constants (e.g., colors, API URLs)
+├── context/                 # React Context for state management
+│   ├── AuthContext.js       # Authentication state
+│   └── CartContext.js       # Cart state
+├── hooks/                   # Custom React hooks
+├── navigation/              # Navigation setup (React Navigation)
+│   ├── AppNavigator.js      # Main navigation stack
+│   └── AuthNavigator.js     # Authentication navigation stack
+├── screens/                 # App screens
+│   ├── auth/                # Authentication screens (e.g., Login, Register)
+│   ├── home/                # Home screen
+│   ├── products/            # Product catalog and details screens
+│   ├── cart/                # Cart and checkout screens
+│   ├── profile/             # User profile and transaction history
+│   ├── orders/              # Order tracking screen
+│   └── admin/               # Admin dashboard screens
+├── services/                # API service calls
+│   ├── authService.js       # Authentication API calls
+│   ├── productService.js    # Product API calls
+│   ├── orderService.js      # Order API calls
+│   └── reviewService.js     # Review API calls
+├── utils/                   # Utility functions (e.g., formatters, validators)
+├── App.js                   # Main app entry point
+└── package.json             # Project dependencies
