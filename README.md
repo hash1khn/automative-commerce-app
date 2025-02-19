@@ -1,7 +1,3 @@
-Here’s a comprehensive **README.md** for your **Automotive Commerce Official** GitHub repository. This README provides an overview of the project, setup instructions, and other relevant details for developers.
-
----
-
 # **Automotive Commerce Official**
 
 ![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
