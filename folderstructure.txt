@@ -1,75 +1,84 @@
-automotive-commerce-backend/
-├── config/                  # Configuration files (e.g., database, environment variables)
-│   ├── db.js               # Database connection setup
-│   └── auth.js             # Authentication configuration (e.g., JWT secret)
-├── controllers/            # Route handlers
-│   ├── authController.js    # Authentication logic (login, register, forgot password)
-│   ├── productController.js # Product-related logic (CRUD operations)
-│   ├── cartController.js    # Cart-related logic (add/remove items)
-│   ├── orderController.js   # Order-related logic (create, track orders)
-│   ├── reviewController.js  # Review-related logic (add, fetch reviews)
-│   └── adminController.js   # Admin-related logic (manage users, roles)
-├── middleware/              # Custom middleware
-│   ├── authMiddleware.js   # Authentication and authorization checks
-│   └── errorHandler.js     # Global error handling
-├── models/                  # Database models (Mongoose/SQL)
-│   ├── User.js             # User model
-│   ├── Product.js          # Product model
-│   ├── Order.js            # Order model
-│   └── Review.js           # Review model
-├── routes/                  # API routes
-│   ├── authRoutes.js        # Authentication routes
-│   ├── productRoutes.js     # Product routes
-│   ├── cartRoutes.js        # Cart routes
-│   ├── orderRoutes.js       # Order routes
-│   ├── reviewRoutes.js      # Review routes
-│   └── adminRoutes.js       # Admin routes
-├── services/                # Business logic (optional, for complex apps)
-│   ├── authService.js       # Authentication logic
-│   ├── productService.js    # Product logic
-│   └── orderService.js      # Order logic
-├── utils/                   # Utility functions
-│   ├── email.js            # Email sending utility (e.g., password recovery)
-│   ├── validators.js       # Input validation functions
-│   └── logger.js           # Logging utility
-├── .env                     # Environment variables
-├── app.js                   # Main app entry point (Express setup)
-├── server.js                # Server startup script
-└── package.json             # Project dependencies
-
-
-
-automotive-commerce-app/
-├── assets/                  # Static assets (images, fonts, icons)
-│   ├── images/
-│   └── fonts/
-├── components/              # Reusable UI components
-│   ├── common/              # Generic components (e.g., buttons, headers)
-│   ├── auth/                # Authentication-related components (e.g., login form)
-│   ├── products/            # Product-related components (e.g., ProductCard)
-│   ├── cart/                # Cart-related components (e.g., CartItem)
-│   └── reviews/             # Review-related components (e.g., ReviewCard)
-├── constants/               # Constants (e.g., colors, API URLs)
-├── context/                 # React Context for state management
-│   ├── AuthContext.js       # Authentication state
-│   └── CartContext.js       # Cart state
-├── hooks/                   # Custom React hooks
-├── navigation/              # Navigation setup (React Navigation)
-│   ├── AppNavigator.js      # Main navigation stack
-│   └── AuthNavigator.js     # Authentication navigation stack
-├── screens/                 # App screens
-│   ├── auth/                # Authentication screens (e.g., Login, Register)
-│   ├── home/                # Home screen
-│   ├── products/            # Product catalog and details screens
-│   ├── cart/                # Cart and checkout screens
-│   ├── profile/             # User profile and transaction history
-│   ├── orders/              # Order tracking screen
-│   └── admin/               # Admin dashboard screens
-├── services/                # API service calls
-│   ├── authService.js       # Authentication API calls
-│   ├── productService.js    # Product API calls
-│   ├── orderService.js      # Order API calls
-│   └── reviewService.js     # Review API calls
-├── utils/                   # Utility functions (e.g., formatters, validators)
-├── App.js                   # Main app entry point
-└── package.json             # Project dependencies
+Automotive-Commerce-Official/
+├── frontend/                     # React Native Mobile App
+│   ├── android/                  # Android-specific native code
+│   ├── ios/                      # iOS-specific native code
+│   ├── src/
+│   │   ├── assets/               # Images, fonts, and other static assets
+│   │   │   ├── images/
+│   │   │   └── fonts/
+│   │   ├── components/           # Reusable UI components
+│   │   │   ├── common/           # Common components (buttons, inputs, etc.)
+│   │   │   └── layout/           # Layout wrappers, headers, footers
+│   │   ├── navigation/           # App navigation setup
+│   │   │   ├── AppNavigator.js   # Main navigation container
+│   │   │   └── AuthNavigator.js  # Authentication-specific navigation
+│   │   ├── redux/                # Redux state management (if using Redux)
+│   │   │   ├── actions/          # Redux actions
+│   │   │   ├── reducers/         # Redux reducers
+│   │   │   ├── store.js          # Redux store configuration
+│   │   │   └── types.js          # Action types
+│   │   ├── screens/              # App screens
+│   │   │   ├── Authentication/
+│   │   │   │   ├── LoginScreen.js
+│   │   │   │   ├── RegisterScreen.js
+│   │   │   │   └── ForgotPasswordScreen.js
+│   │   │   ├── Home/
+│   │   │   │   └── HomeScreen.js
+│   │   │   ├── Product/
+│   │   │   │   ├── ProductListScreen.js
+│   │   │   │   └── ProductDetailScreen.js
+│   │   │   ├── Cart/
+│   │   │   │   └── CartScreen.js
+│   │   │   ├── Checkout/
+│   │   │   │   └── CheckoutScreen.js
+│   │   │   ├── Profile/
+│   │   │   │   ├── ProfileScreen.js
+│   │   │   │   └── TransactionHistoryScreen.js
+│   │   │   └── Order/
+│   │   │       └── OrderTrackingScreen.js
+│   │   ├── services/             # API calls and service functions
+│   │   │   └── api.js            # Axios or fetch API wrapper
+│   │   ├── utils/                # Helper functions and utilities
+│   │   │   └── helpers.js
+│   │   ├── App.js                # App entry point
+│   │   └── config.js             # App configuration variables
+│   ├── package.json              # Frontend dependencies and scripts
+│   ├── app.json                 # Expo or React Native project configuration
+│   └── README.md                 # Frontend documentation
+│
+├── backend/                      # Node.js/Express API
+│   ├── src/
+│   │   ├── config/               # Configuration files
+│   │   │   └── database.js       # Database connection setup
+│   │   ├── controllers/          # Request handlers for various routes
+│   │   │   ├── authController.js
+│   │   │   ├── productController.js
+│   │   │   ├── orderController.js
+│   │   │   ├── userController.js
+│   │   │   └── adminController.js
+│   │   ├── middlewares/          # Custom middleware (authentication, error handling)
+│   │   │   ├── authMiddleware.js
+│   │   │   └── errorHandler.js
+│   │   ├── models/               # Database models (SQL/MongoDB schemas)
+│   │   │   ├── User.js
+│   │   │   ├── Product.js
+│   │   │   ├── Order.js
+│   │   │   └── Review.js
+│   │   ├── routes/               # API route definitions
+│   │   │   ├── authRoutes.js
+│   │   │   ├── productRoutes.js
+│   │   │   ├── orderRoutes.js
+│   │   │   └── adminRoutes.js
+│   │   ├── utils/                # Utility functions (email services, payment simulation)
+│   │   │   ├── emailService.js
+│   │   │   └── paymentSimulator.js
+│   │   ├── app.js                # Express app configuration
+│   │   └── server.js             # Server startup file
+│   ├── package.json              # Backend dependencies and scripts
+│   ├── .env                      # Environment variables
+│   └── README.md                 # Backend documentation
+│
+└── docs/                         # Project Documentation
+    ├── architecture.md           # System architecture and design decisions
+    ├── api_documentation.md      # API endpoints and usage examples
+    └── setup_guide.md            # Setup and installation instructions
