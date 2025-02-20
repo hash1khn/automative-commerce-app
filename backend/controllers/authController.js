@@ -144,3 +144,95 @@ exports.login = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Generate a reset token and email it to the user
+ * @access  Public
+ */
+exports.forgotPassword = async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required.' });
+      }
+  
+      // 1. Check if user exists
+      const user = await User.findOne({ email });
+      if (!user) {
+        // For security, you can still return a success message
+        // to not reveal whether the email exists. But for clarity:
+        return res.status(404).json({ message: 'User with that email not found.' });
+      }
+  
+      // 2. Create a JWT reset token
+      const resetToken = jwt.sign(
+        { email: user.email },
+        process.env.PASSWORD_RESET_SECRET,
+        { expiresIn: RESET_TOKEN_EXPIRATION }
+      );
+  
+      // 3. Construct reset link
+      const resetLink = `${process.env.CLIENT_DOMAIN}/reset-password?token=${resetToken}`;
+  
+      // 4. Send reset email
+      await sendEmail({
+        to: user.email,
+        subject: 'Password Reset Request',
+        text: `Hello, ${user.name}.
+  You requested to reset your password. Click this link to set a new password:
+  ${resetLink}
+  If you did not request a reset, please ignore this email.
+  (This link expires in 15 minutes.)
+  `,
+      });
+  
+      return res.status(200).json({
+        message: 'Password reset link sent to your email (if it exists in our system).',
+      });
+    } catch (error) {
+      console.error('Forgot Password Error:', error);
+      return res.status(500).json({ message: 'Internal server error.' });
+    }
+  };
+  
+  /**
+   * @route   POST /api/auth/reset-password
+   * @desc    Validate reset token and update the user password
+   * @access  Public
+   */
+  exports.resetPassword = async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: 'Token and new password are required.' });
+      }
+  
+      // 1. Verify the token
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.PASSWORD_RESET_SECRET);
+      } catch (err) {
+        return res.status(400).json({ message: 'Invalid or expired reset token.' });
+      }
+  
+      const { email } = decoded;
+  
+      // 2. Find the user by email
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: 'User not found.' });
+      }
+  
+      // 3. Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+      user.password = hashedPassword;
+  
+      // 4. Save the user
+      await user.save();
+  
+      return res.status(200).json({ message: 'Password has been reset successfully.' });
+    } catch (error) {
+      console.error('Reset Password Error:', error);
+      return res.status(500).json({ message: 'Internal server error.' });
+    }
+  };
