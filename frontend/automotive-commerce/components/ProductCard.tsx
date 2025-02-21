@@ -1,4 +1,4 @@
-// components/ProductCard.tsx
+import React, { forwardRef } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
 
 interface Product {
@@ -12,12 +12,13 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
-  onPress: () => void;
+  onPress?: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
+// ✅ Fix: Wrap ProductCard with forwardRef to accept refs
+const ProductCard = forwardRef<View, ProductCardProps>(({ product, onPress }, ref) => {
   return (
-    <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
+    <TouchableOpacity ref={ref} style={styles.cardContainer} onPress={onPress}>
       <Image
         source={{ uri: product.image || 'https://via.placeholder.com/150' }}
         style={styles.productImage}
@@ -31,7 +32,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
       </View>
     </TouchableOpacity>
   );
-};
+});
+
+// ✅ Fix: Add displayName to prevent debug issues
+ProductCard.displayName = 'ProductCard';
+
+export default ProductCard;
 
 const styles = StyleSheet.create({
   cardContainer: {
@@ -62,7 +68,7 @@ const styles = StyleSheet.create({
   },
   productPrice: {
     fontSize: 14,
-    color: '#007BFF',
+    color: '#A03048',
     marginVertical: 5,
   },
   productStock: {
@@ -70,5 +76,3 @@ const styles = StyleSheet.create({
     color: '#666',
   },
 });
-
-export default ProductCard;

@@ -1,10 +1,11 @@
 // App.tsx
 import { CartProvider } from './context/CartContext';
+import RootProvider from './app/_layout';
 
 export default function App() {
   return (
     <CartProvider>
-      {/* The Router will render based on the file structure */}
+      <RootProvider/>
     </CartProvider>
   );
 }
