@@ -6,6 +6,8 @@ const { sendEmail } = require('../utils/emailHelper');
 
 const SALT_ROUNDS = 10;
 const EMAIL_EXPIRATION = '1h'; // e.g., 1 hour
+const RESET_TOKEN_EXPIRATION = '15m';
+
 
 /**
  * @route   POST /api/auth/signup
