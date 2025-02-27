@@ -18,27 +18,25 @@ exports.signup = async (req, res) => {
   try {
     const { name, email, phone, password, role } = req.body;
 
-    // 1. Prevent users from registering as admin
-    // if (role && role === 'admin') {
-    //   return res.status(403).json({ message: 'You cannot register as an admin.' });
-    // }
-
-    // 2. Check if user already exists
+    // 1. Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User with this email already exists.' });
     }
 
-    // 3. Hash the password
+    // 2. Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Create user (role defaults to "customer")
+    // 3. Determine user role
+    const userRole = role && role === 'admin' ? 'admin' : 'customer';
+
+    // 4. Create user
     const newUser = await User.create({
       name,
       email,
       phone,
       password: hashedPassword,
-      role: 'customer', // Always set to "customer"
+      role: userRole,
       verified: false, // Not verified until email confirmation
     });
 
@@ -63,6 +61,7 @@ exports.signup = async (req, res) => {
     return res.status(201).json({
       message: 'Signup successful! Check your email to verify your account.',
       userId: newUser._id,
+      role: newUser.role,
     });
 
   } catch (error) {
@@ -136,9 +135,9 @@ exports.login = async (req, res) => {
 
     // 4. Create JWT for the user
     const authToken = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email,role:user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' } // or any desired duration
+      { expiresIn: '72h' } // or any desired duration
     );
 
     // 5. Send token back
