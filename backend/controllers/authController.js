@@ -5,7 +5,6 @@ const User = require('../models/User');
 const { sendEmail } = require('../utils/emailHelper');
 
 const SALT_ROUNDS = 10;
-const EMAIL_EXPIRATION = '1h'; // e.g., 1 hour
 const RESET_TOKEN_EXPIRATION = '15m';
 
 
@@ -14,61 +13,64 @@ const RESET_TOKEN_EXPIRATION = '15m';
  * @desc    Sign up a new user and send verification email
  * @access  Public
  */
+// /src/controllers/authController.js
 exports.signup = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, phone, password, role } = req.body;
 
-    // 1. Check if user already exists
+    // 1. Prevent users from registering as admin
+    // if (role && role === 'admin') {
+    //   return res.status(403).json({ message: 'You cannot register as an admin.' });
+    // }
+
+    // 2. Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User with this email already exists.' });
     }
 
-    // 2. Hash the password
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    // 3. Hash the password
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 3. Create the user (verified = false initially)
+    // 4. Create user (role defaults to "customer")
     const newUser = await User.create({
       name,
       email,
+      phone,
       password: hashedPassword,
-      verified: false,
+      role: 'customer', // Always set to "customer"
+      verified: false, // Not verified until email confirmation
     });
 
-    // 4. Generate a token for email verification
+    // 5. Generate email verification token
     const emailVerificationToken = jwt.sign(
       { email: newUser.email },
       process.env.EMAIL_VERIFICATION_SECRET,
-      { expiresIn: EMAIL_EXPIRATION }
+      { expiresIn: '1h' }
     );
 
-    // 5. Construct a verification link
-    // For example, if your server runs on port 5000:
-    // http://localhost:5000/api/auth/verify-email?token=XYZ
-    // Or if you have a separate client, adjust accordingly
+    // 6. Construct verification link
     const verificationLink = `${process.env.CLIENT_DOMAIN}/api/auth/verify-email?token=${emailVerificationToken}`;
 
-    // 6. Send the email using Brevo SMTP
+    // 7. Send verification email
     await sendEmail({
       to: newUser.email,
-      subject: 'Verify your email - Automotive Commerce Official',
-      text: `Hello, ${newUser.name}!
-Please verify your account by clicking the following link:
-${verificationLink}
-This link will expire in 1 hour.
-`,
+      subject: 'Verify Your Email - Automotive Commerce Official',
+      text: `Hello ${newUser.name}, please verify your email using this link: ${verificationLink}`,
     });
 
-    // 7. Respond to the client
-    return res.status(200).json({
+    // 8. Respond to client
+    return res.status(201).json({
       message: 'Signup successful! Check your email to verify your account.',
       userId: newUser._id,
     });
+
   } catch (error) {
     console.error('Signup error:', error);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
 
 /**
  * @route   GET /api/auth/verify-email

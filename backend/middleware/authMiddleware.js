@@ -23,3 +23,10 @@ exports.authenticateJWT = (req, res, next) => {
     next();
   });
 };
+
+exports.adminCheck = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    return next(); // Allow access if admin
+  }
+  return res.status(403).json({ message: 'Admin access required.' });
+};
