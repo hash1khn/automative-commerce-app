@@ -130,3 +130,63 @@ exports.deleteProduct = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
+/**
+ * @route   GET /api/products/search
+ * @desc    Search and filter products (Without Category)
+ * @access  Public
+ */
+exports.searchProducts = async (req, res) => {
+  try {
+    const { keyword, minPrice, maxPrice, sort, page, limit } = req.query;
+
+    let filter = {};
+
+    // 🔍 Search by keyword (name or description)
+    if (keyword) {
+      filter.$or = [
+        { name: { $regex: keyword, $options: 'i' } }, // Case-insensitive name search
+        { description: { $regex: keyword, $options: 'i' } } // Case-insensitive description search
+      ];
+    }
+
+    // 🔍 Filter by price range
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+    }
+
+    // 🏷 Pagination (Defaults: page 1, limit 10)
+    const currentPage = parseInt(page) || 1;
+    const itemsPerPage = parseInt(limit) || 10;
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    // 🔄 Sorting (Options: newest, price_low, price_high)
+    let sortOption = { createdAt: -1 }; // Default: Newest first
+    if (sort === 'price_low') {
+      sortOption = { price: 1 };
+    } else if (sort === 'price_high') {
+      sortOption = { price: -1 };
+    }
+
+    // 🔍 Execute Query
+    const products = await Product.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(itemsPerPage);
+
+    // Count total matching products for pagination
+    const totalProducts = await Product.countDocuments(filter);
+
+    return res.status(200).json({
+      products,
+      currentPage,
+      totalPages: Math.ceil(totalProducts / itemsPerPage),
+      totalProducts,
+    });
+  } catch (error) {
+    console.error('Search Products Error:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};

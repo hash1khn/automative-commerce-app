@@ -5,6 +5,7 @@ const morgan=require('morgan');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
+const cartRoutes=require('./routes/cartRoutes');
 
 
 const app = express();
@@ -22,6 +23,6 @@ app.use(express.urlencoded({ extended: true })); // Handles form-data
 app.use('/api/auth', authRoutes);
 app.use('/api/users',userRoutes)
 app.use('/api/products', productRoutes);
-
+app.use('/api/cart',cartRoutes)
 
 module.exports = app;
