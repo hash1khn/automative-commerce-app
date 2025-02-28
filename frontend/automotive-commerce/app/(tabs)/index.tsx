@@ -17,7 +17,7 @@ interface Product {
   updatedAt: string;
 }
 
-const API_URL = 'http://localhost:5000/api/product/get-all-products';
+const API_URL = 'http://localhost:5000/api/products/get-all-products';
 
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);

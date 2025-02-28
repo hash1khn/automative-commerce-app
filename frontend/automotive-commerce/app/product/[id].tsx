@@ -23,7 +23,7 @@ interface ApiResponse {
   product: Product;
 }
 
-const API_URL = 'http://localhost:5000/api/product'; // Replace with your API endpoint
+const API_URL = 'http://localhost:5000/api/products'; // Replace with your API endpoint
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
