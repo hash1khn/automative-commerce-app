@@ -28,7 +28,13 @@ export default function HomeScreen() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const response = await axios.get<Product[]>(API_URL);
+        const response = await axios.get<Product[]>(API_URL, {
+          headers: {
+            'Cache-Control': 'no-cache', // Disable caching
+            'Pragma': 'no-cache',
+            'Expires': '0',
+          },
+        });
         const cleanedProducts = response.data.map((product) => ({
           ...product,
           images: product.images?.map((image) => image.replace(/"|<.*?>/g, '')).filter(Boolean) || [],
@@ -41,7 +47,7 @@ export default function HomeScreen() {
         setLoading(false);
       }
     };
-
+  
     fetchProducts();
   }, []);
 

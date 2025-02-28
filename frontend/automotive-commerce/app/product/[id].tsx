@@ -4,7 +4,6 @@ import { View, Text, Image, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
-// Define interfaces
 interface Product {
   _id: string;
   name: string;
@@ -16,14 +15,7 @@ interface Product {
   updatedAt: string;
 }
 
-interface ApiResponse {
-  error: boolean;
-  success: boolean;
-  message: string;
-  product: Product;
-}
-
-const API_URL = 'http://localhost:5000/api/products'; // Replace with your API endpoint
+const API_URL = 'http://localhost:5000/api/products'; // Update to match your single product endpoint
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -35,12 +27,8 @@ export default function ProductDetailScreen() {
     const fetchProduct = async () => {
       setLoading(true);
       try {
-        const response = await axios.get<ApiResponse>(`${API_URL}/${id}`);
-        if (response.data.success) {
-          setProduct(response.data.product);
-        } else {
-          throw new Error(response.data.message);
-        }
+        const response = await axios.get<Product>(`${API_URL}/${id}`);
+        setProduct(response.data);
       } catch (error: any) {
         setError(error.message || 'Unexpected error occurred');
       } finally {
@@ -70,23 +58,16 @@ export default function ProductDetailScreen() {
   return (
     <View style={styles.container}>
       {product && (
-        <>
-          {product.images.length === 0 ? (
-            <Image
-              style={styles.productImage}
-              source={require('../../assets/images/product-placeholder.png')} // Replace with your placeholder
-            />
-          ) : (
-            <Image
-              style={styles.productImage}
-              source={{ uri: product.images[0].replace(/"|<.*?>/g, '') }}
-            />
-          )}
+        <View>
+          <Image
+            style={styles.productImage}
+            source={{ uri: product.images[0]?.replace(/"|<.*?>/g, '') }}
+          />
           <Text style={styles.productName}>{product.name}</Text>
           <Text style={styles.productPrice}>${product.price}</Text>
           <Text style={styles.productDescription}>{product.description}</Text>
           <Text style={styles.productRating}>⭐ {product.rating.toFixed(1)}</Text>
-        </>
+        </View>
       )}
     </View>
   );
@@ -130,9 +111,5 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#FF9900',
     fontWeight: 'bold',
-  },
-  DateTime: {
-    fontSize: 12,
-    color: '#666',
   },
 });
