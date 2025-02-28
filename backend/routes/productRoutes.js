@@ -6,6 +6,7 @@ const {
   getProductById,
   updateProduct,
   deleteProduct,
+  searchProducts,
 } = require('../controllers/productController');
 
 const { authenticateJWT,adminCheck } = require('../middleware/authMiddleware');
