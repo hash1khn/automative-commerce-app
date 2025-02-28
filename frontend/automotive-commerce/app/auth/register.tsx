@@ -1,7 +1,39 @@
 import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Link } from 'expo-router';
+import { useState } from 'react';
 
 export default function RegisterScreen() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData({ ...formData, [field]: value });
+  };
+
+  const handleSubmit = () => {
+    const { name, email, phone, password, confirmPassword } = formData;
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    const userData = {
+      name,
+      email,
+      phone,
+      password,
+      role: 'admin', // Fixed role
+    };
+
+    console.log('Register', userData);
+    // Add API call to backend here
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.formContainer}>
@@ -11,6 +43,8 @@ export default function RegisterScreen() {
           style={styles.input}
           placeholder="Full Name"
           placeholderTextColor="#888"
+          value={formData.name}
+          onChangeText={(text) => handleInputChange('name', text)}
         />
         <TextInput
           style={styles.input}
@@ -18,22 +52,36 @@ export default function RegisterScreen() {
           placeholderTextColor="#888"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={formData.email}
+          onChangeText={(text) => handleInputChange('email', text)}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Phone Number"
+          placeholderTextColor="#888"
+          keyboardType="phone-pad"
+          value={formData.phone}
+          onChangeText={(text) => handleInputChange('phone', text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Password"
           placeholderTextColor="#888"
           secureTextEntry
+          value={formData.password}
+          onChangeText={(text) => handleInputChange('password', text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Confirm Password"
           placeholderTextColor="#888"
           secureTextEntry
+          value={formData.confirmPassword}
+          onChangeText={(text) => handleInputChange('confirmPassword', text)}
         />
 
         {/* Register Button */}
-        <TouchableOpacity style={styles.button} onPress={() => console.log('Register')}>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text style={styles.buttonText}>Register</Text>
         </TouchableOpacity>
 

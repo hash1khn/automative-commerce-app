@@ -1,13 +1,15 @@
-import React, { forwardRef } from 'react';
+// components/ProductCard.tsx
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
 
 interface Product {
-  id: number;
+  _id: string;
   name: string;
   price: number;
-  image?: string;
-  stock: number;
-  category: string;
+  description: string;
+  rating: number;
+  images: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ProductCardProps {
@@ -15,29 +17,21 @@ interface ProductCardProps {
   onPress?: () => void;
 }
 
-// ✅ Fix: Wrap ProductCard with forwardRef to accept refs
-const ProductCard = forwardRef<View, ProductCardProps>(({ product, onPress }, ref) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
   return (
-    <TouchableOpacity ref={ref} style={styles.cardContainer} onPress={onPress}>
+    <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
       <Image
-        source={{ uri: product.image || 'https://via.placeholder.com/150' }}
+        source={product.images[0] ? { uri: product.images[0] } : require('../assets/images/product-placeholder.png')}
         style={styles.productImage}
       />
       <View style={styles.cardContent}>
         <Text style={styles.productName}>{product.name}</Text>
-        <Text style={styles.productPrice}>${product.price.toFixed(2)}</Text>
-        <Text style={styles.productStock}>
-          Stock: {product.stock} | Category: {product.category}
-        </Text>
+        <Text style={styles.productPrice}>${product.price}</Text>
+        <Text style={styles.productRating}>⭐ {product.rating}</Text>
       </View>
     </TouchableOpacity>
   );
-});
-
-// ✅ Fix: Add displayName to prevent debug issues
-ProductCard.displayName = 'ProductCard';
-
-export default ProductCard;
+};
 
 const styles = StyleSheet.create({
   cardContainer: {
@@ -68,11 +62,13 @@ const styles = StyleSheet.create({
   },
   productPrice: {
     fontSize: 14,
-    color: '#A03048',
+    color: '#007BFF',
     marginVertical: 5,
   },
-  productStock: {
+  productRating: {
     fontSize: 12,
     color: '#666',
   },
 });
+
+export default ProductCard;

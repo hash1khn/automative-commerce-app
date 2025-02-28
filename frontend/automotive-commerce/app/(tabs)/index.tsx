@@ -1,44 +1,72 @@
-import { View, FlatList, StyleSheet, SafeAreaView } from 'react-native';
+// app/(tabs)/home.tsx
+import { View, FlatList, StyleSheet, SafeAreaView, ActivityIndicator, Text } from 'react-native';
 import { Link } from 'expo-router';
 import ProductCard from '../../components/ProductCard';
 import Header from '../../components/Header';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
-const products = [
-  {
-    id: 1,
-    name: 'Advanced Spark Plug',
-    price: 19.99,
-    stock: 100,
-    category: 'Engine',
-    image: 'https://via.placeholder.com/150?text=Spark+Plug',
-  },
-  {
-    id: 2,
-    name: 'Premium Brake Pads',
-    price: 49.99,
-    stock: 80,
-    category: 'Brakes',
-    image: 'https://via.placeholder.com/150?text=Brake+Pads',
-  },
-  {
-    id: 3,
-    name: 'Oil Filter',
-    price: 14.99,
-    stock: 50,
-    category: 'Engine',
-    image: 'https://via.placeholder.com/150?text=Oil+Filter',
-  },
-  {
-    id: 4,
-    name: 'Car Battery',
-    price: 99.99,
-    stock: 30,
-    category: 'Electrical',
-    image: 'https://via.placeholder.com/150?text=Car+Battery',
-  },
-];
+interface Product {
+  _id: string;
+  name: string;
+  price: number;
+  description: string;
+  rating: number;
+  images: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+const API_URL = 'http://localhost:5000/api/product/get-all-products';
 
 export default function HomeScreen() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get<Product[]>(API_URL);
+        const cleanedProducts = response.data.map((product) => ({
+          ...product,
+          images: product.images?.map((image) => image.replace(/"|<.*?>/g, '')).filter(Boolean) || [],
+        }));
+        setProducts(cleanedProducts);
+      } catch (error) {
+        setError('Failed to load products');
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header />
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header />
+        <View style={styles.centered}>
+          <Text>Error: {error}</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Header />
@@ -46,15 +74,15 @@ export default function HomeScreen() {
         data={products}
         renderItem={({ item }) => (
           <View style={styles.productWrapper}>
-            {/* ✅ Fix: Use asChild to prevent ref issues */}
-            <Link href={`../product/${item.id}`} asChild>
+            <Link href={`/product/${item._id}`} asChild>
               <ProductCard product={item} />
             </Link>
           </View>
         )}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.flatListContent}
         showsVerticalScrollIndicator={false}
+        numColumns={1}
       />
     </SafeAreaView>
   );
@@ -66,10 +94,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     backgroundColor: '#f5f5f5',
   },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   flatListContent: {
     paddingBottom: 20,
   },
   productWrapper: {
-    marginBottom: 15,
+    marginBottom: 5,
   },
 });
