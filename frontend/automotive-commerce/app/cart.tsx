@@ -1,4 +1,3 @@
-// app/cart.tsx
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { useCart, useUpdateCart, useRemoveFromCart, useClearCart } from '../hooks/useCart';
 
@@ -32,28 +31,30 @@ export default function CartScreen() {
     );
   }
 
-  const total = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const total = cart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
   return (
     <View style={styles.container}>
       <FlatList
         data={cart.items}
-        keyExtractor={(item) => item.productId}
+        keyExtractor={(item) => item.product._id}
         renderItem={({ item }) => (
           <View style={styles.itemContainer}>
             <Image
-              source={{ uri: item.image }}
+              source={{ uri: item.product.images[0] }}
               style={styles.productImage}
               resizeMode="contain"
             />
             <View style={styles.itemDetails}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.productPrice}>${item.price.toFixed(2)}</Text>
+              <Text style={styles.productName}>{item.product.name}</Text>
+              <Text style={styles.productPrice}>
+                ${item.product.price.toFixed(2)}
+              </Text>
               
               <View style={styles.quantityContainer}>
                 <TouchableOpacity
                   onPress={() => updateCart({
-                    productId: item.productId,
+                    productId: item.product._id,
                     quantity: Math.max(1, item.quantity - 1)
                   })}
                   style={styles.quantityButton}
@@ -65,7 +66,7 @@ export default function CartScreen() {
                 
                 <TouchableOpacity
                   onPress={() => updateCart({
-                    productId: item.productId,
+                    productId: item.product._id,
                     quantity: item.quantity + 1
                   })}
                   style={styles.quantityButton}
@@ -75,7 +76,7 @@ export default function CartScreen() {
               </View>
               
               <TouchableOpacity
-                onPress={() => removeFromCart(item.productId)}
+                onPress={() => removeFromCart(item.product._id)}
                 style={styles.removeButton}
               >
                 <Text style={styles.removeText}>Remove</Text>
