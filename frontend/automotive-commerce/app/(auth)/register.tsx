@@ -1,8 +1,11 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
-import { Link } from 'expo-router';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
+import axios from 'axios'; // Import the API instance
 
 export default function RegisterScreen() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -11,14 +14,32 @@ export default function RegisterScreen() {
     confirmPassword: '',
   });
 
+
+  const [loading, setLoading] = useState(false); // To disable button during API call
+
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
   };
+  const isValidPhoneNumber = (phone: string) => {
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    return phoneRegex.test(phone);
+  };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const { name, email, phone, password, confirmPassword } = formData;
+
+    if (!name || !email || !phone || !password || !confirmPassword) {
+      Alert.alert('Error', 'All fields are required');
+      return;
+    }
+
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    if (phone && !isValidPhoneNumber(phone)) {
+      Alert.alert('Error', 'Invalid phone number format. Use international format (e.g., +1234567890)');
       return;
     }
 
@@ -27,11 +48,23 @@ export default function RegisterScreen() {
       email,
       phone,
       password,
-      role: 'admin', // Fixed role
     };
 
-    console.log('Register', userData);
-    // Add API call to backend here
+    try {
+      setLoading(true);
+      const response = await axios.post('http://localhost:5000/api/auth/signup', userData);
+
+      if (response.status === 201) {
+        Alert.alert('Success', 'Account created successfully! Please login.');
+        router.replace('/(auth)/check-email'); // Redirect to login
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Something went wrong';
+      Alert.alert('Registration Failed', errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -81,13 +114,13 @@ export default function RegisterScreen() {
         />
 
         {/* Register Button */}
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Register</Text>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? 'Registering...' : 'Register'}</Text>
         </TouchableOpacity>
 
         {/* Login Link */}
         <TouchableOpacity style={styles.linkContainer}>
-          <Link href="/auth/login" asChild>
+          <Link href="/(auth)/login" asChild>
             <Text style={styles.link}>Already have an account? Login</Text>
           </Link>
         </TouchableOpacity>
