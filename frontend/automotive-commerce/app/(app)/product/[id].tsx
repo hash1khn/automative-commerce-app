@@ -3,6 +3,7 @@ import { useLocalSearchParams } from 'expo-router';
 import { View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+import { useAddToCart } from '../../../hooks/useCart';
 
 interface Product {
   _id: string;
@@ -22,6 +23,12 @@ export default function ProductDetailScreen() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { mutate: addToCart, isPending } = useAddToCart(); // Use `isPending` instead of `isLoading`
+
+  const handleAddToCart = () => {
+    addToCart({ productId: id as string, quantity: 1 });
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -73,8 +80,14 @@ export default function ProductDetailScreen() {
               <Text style={styles.productRating}>⭐ {product.rating.toFixed(1)}</Text>
               <Text style={styles.ratingText}>Based on 45 reviews</Text>
             </View>
-            <TouchableOpacity style={styles.addToCartButton}>
-              <Text style={styles.addToCartText}>Add to Cart</Text>
+            <TouchableOpacity
+              style={[styles.addToCartButton, isPending && styles.disabledButton]}
+              onPress={handleAddToCart}
+              disabled={isPending}
+            >
+              <Text style={styles.addToCartText}>
+                {isPending ? 'Adding to Cart...' : 'Add to Cart'}
+              </Text>
             </TouchableOpacity>
           </View>
         </>
@@ -150,6 +163,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     alignItems: 'center',
     marginBottom: 16,
+  },
+  disabledButton: {
+    backgroundColor: '#A9A9A9', // Grayed out when disabled
   },
   addToCartText: {
     color: '#fff',
