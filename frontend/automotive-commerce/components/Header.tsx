@@ -1,9 +1,11 @@
-// components/Header.tsx
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link } from 'expo-router';
 import CartIcon from './CartIcon';
+import { useAuth } from '../context/AuthContext';
 
 export default function Header() {
+  const { user, logout } = useAuth(); // Get auth state
+
   return (
     <View style={styles.headerContainer}>
       <Text style={styles.title}>Automotive Commerce</Text>
@@ -12,12 +14,18 @@ export default function Header() {
         {/* Cart Icon */}
         <CartIcon />
 
-        {/* Login Button */}
-        <Link href="/(auth)/login" asChild>
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Login</Text>
+        {/* Show Login or Logout based on auth state */}
+        {user ? (
+          <TouchableOpacity style={styles.button} onPress={logout}>
+            <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
-        </Link>
+        ) : (
+          <Link href="/(auth)/login" asChild>
+            <TouchableOpacity style={styles.button}>
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+          </Link>
+        )}
       </View>
     </View>
   );

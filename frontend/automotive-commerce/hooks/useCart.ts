@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { cartApi} from '../utils/cartApis';
+import api from '../utils/api';
 
 interface CartItem {
   product: {
@@ -11,23 +11,17 @@ interface CartItem {
   quantity: number;
 }
 
-
 interface Cart {
   items: CartItem[];
-  totalItems: number;
   totalPrice: number;
 }
-const AUTH_TOKEN = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3YzMwMjVkMThlODczZGQxYjgzZmM3OSIsImVtYWlsIjoia3phaXRlY2hAZ21haWwuY29tIiwicm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzQwODMzNDIyLCJleHAiOjE3NDEwOTI2MjJ9.iy9WNuq82lR5KZ-OJtm9H2vvKPv95HhiVFrW6Gmjmh4';
 
-
-// Get current cart
+// Fetch cart
 export const useCart = () => {
   return useQuery<Cart>({
     queryKey: ['cart'],
     queryFn: async () => {
-      const response = await cartApi.getCart({
-        headers: { Authorization: AUTH_TOKEN },
-      });
+      const response = await api.get('/cart/get-cart'); // Token auto-attached
       return response.data;
     },
   });
@@ -36,10 +30,9 @@ export const useCart = () => {
 // Add to cart
 export const useAddToCart = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
-      const response = await cartApi.addToCart(productId, quantity);
+      const response = await api.post('/cart/add-to-cart', { productId, quantity });
       return response.data;
     },
     onSuccess: () => {
@@ -48,11 +41,12 @@ export const useAddToCart = () => {
   });
 };
 
+// Update cart item quantity
 export const useUpdateCart = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
-      const response = await cartApi.updateCart(productId, quantity);
+      const response = await api.put('/cart/update-cart', { productId, quantity });
       return response.data;
     },
     onSuccess: () => {
@@ -64,10 +58,11 @@ export const useUpdateCart = () => {
 // Remove item from cart
 export const useRemoveFromCart = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async (productId: string) => {
-      const response = await cartApi.removeFromCart(productId);
+      const response = await api.delete('/cart/remove-from-cart', {
+        data: { productId }, // Send productId in the request body
+      });
       return response.data;
     },
     onSuccess: () => {
@@ -76,13 +71,13 @@ export const useRemoveFromCart = () => {
   });
 };
 
+
 // Clear entire cart
 export const useClearCart = () => {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: async () => {
-      const response = await cartApi.clearCart();
+      const response = await api.delete('/cart/clear-cart');
       return response.data;
     },
     onSuccess: () => {

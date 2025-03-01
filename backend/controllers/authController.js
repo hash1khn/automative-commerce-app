@@ -139,9 +139,11 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '72h' } // or any desired duration
     );
+    const userData = user.toObject();
+    delete userData.password;
 
     // 5. Send token back
-    return res.status(200).json({ token: authToken });
+    return res.status(200).json({ token: authToken,user:userData });
   } catch (error) {
     console.error('Login error:', error);
     return res.status(500).json({ message: 'Internal server error.' });

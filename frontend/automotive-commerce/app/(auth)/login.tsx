@@ -1,7 +1,29 @@
-import { StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
-import { Link } from 'expo-router';
+import { useState } from 'react';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useAuth } from '../../context/AuthContext'; // Import auth hook
+import axios from 'axios';
 
 export default function LoginScreen() {
+  const { login } = useAuth(); // Use AuthContext
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
+
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const { token, user } = response.data;
+
+      if (token) {
+        await login(token, user); // Update auth state
+        router.replace('/(app)/home'); // Navigate to home
+      }
+    } catch (error) {
+      Alert.alert('Login Failed', 'Invalid email or password');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.formContainer}>
@@ -13,31 +35,30 @@ export default function LoginScreen() {
           placeholderTextColor="#888"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
         />
         <TextInput
           style={styles.input}
           placeholder="Password"
           placeholderTextColor="#888"
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
 
-        {/* Forgot Password Button */}
         <TouchableOpacity style={styles.forgotPasswordContainer}>
-          {/* <Link href="/auth/forgot-password" asChild> */}
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          {/* </Link> */}
+          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        {/* Login Button */}
-        <TouchableOpacity style={styles.button} onPress={() => console.log('Login')}>
+        <TouchableOpacity style={styles.button} onPress={handleLogin}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
 
-        {/* Register Link */}
         <TouchableOpacity style={styles.linkContainer}>
-          <Link href="/(auth)/register" asChild>
-            <Text style={styles.link}>Don't have an account? Register</Text>
-          </Link>
+          <Text style={styles.link} onPress={() => router.push('/(auth)/register')}>
+            Don't have an account? Register
+          </Text>
         </TouchableOpacity>
       </View>
     </View>
