@@ -1,6 +1,6 @@
 // app/product/[id].tsx
 import { useLocalSearchParams } from 'expo-router';
-import { View, Text, Image, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
@@ -15,7 +15,7 @@ interface Product {
   updatedAt: string;
 }
 
-const API_URL = 'http://localhost:5000/api/products'; // Update to match your single product endpoint
+const API_URL = 'http://localhost:5000/api/products';
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -50,7 +50,7 @@ export default function ProductDetailScreen() {
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text>Error: {error}</Text>
+        <Text style={styles.errorText}>{error}</Text>
       </View>
     );
   }
@@ -58,16 +58,26 @@ export default function ProductDetailScreen() {
   return (
     <View style={styles.container}>
       {product && (
-        <View>
-          <Image
-            style={styles.productImage}
-            source={{ uri: product.images[0]?.replace(/"|<.*?>/g, '') }}
-          />
-          <Text style={styles.productName}>{product.name}</Text>
-          <Text style={styles.productPrice}>${product.price}</Text>
-          <Text style={styles.productDescription}>{product.description}</Text>
-          <Text style={styles.productRating}>⭐ {product.rating.toFixed(1)}</Text>
-        </View>
+        <>
+          <View style={styles.productHeader}>
+            <Image
+              style={styles.productImage}
+              source={{ uri: product.images[0]?.replace(/"|<.*?>/g, '') }}
+            />
+          </View>
+          <View style={styles.productInfo}>
+            <Text style={styles.productName}>{product.name}</Text>
+            <Text style={styles.productPrice}>$ {product.price.toFixed(2)}</Text>
+            <Text style={styles.productDescription}>{product.description}</Text>
+            <View style={styles.ratingContainer}>
+              <Text style={styles.productRating}>⭐ {product.rating.toFixed(1)}</Text>
+              <Text style={styles.ratingText}>Based on 45 reviews</Text>
+            </View>
+            <TouchableOpacity style={styles.addToCartButton}>
+              <Text style={styles.addToCartText}>Add to Cart</Text>
+            </TouchableOpacity>
+          </View>
+        </>
       )}
     </View>
   );
@@ -84,12 +94,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  productImage: {
+  productHeader: {
     width: '100%',
     height: 300,
     marginBottom: 16,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productImage: {
+    width: '90%',
+    height: '90%',
+    resizeMode: 'contain',
     borderRadius: 8,
-    resizeMode: 'cover',
+  },
+  productInfo: {
+    flex: 1,
+    paddingRight: 16,
+    paddingLeft: 16,
   },
   productName: {
     fontSize: 24,
@@ -107,9 +129,35 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     marginBottom: 24,
   },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   productRating: {
     fontSize: 18,
     color: '#FF9900',
     fontWeight: 'bold',
+    marginRight: 8,
+  },
+  ratingText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  addToCartButton: {
+    backgroundColor: '#007BFF',
+    padding: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  addToCartText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: 'red',
   },
 });
