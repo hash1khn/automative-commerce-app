@@ -6,8 +6,8 @@ export default function Header() {
     <View style={styles.headerContainer}>
       <Text style={styles.title}>Automotive Commerce</Text>
       
-      {/* ✅ Fix: Make entire button clickable by wrapping TouchableOpacity in Link */}
-      <Link href="/auth/login" asChild>
+      {/* Link to the Login Page */}
+      <Link href="/(auth)/login" asChild>
         <TouchableOpacity style={styles.button}>
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>

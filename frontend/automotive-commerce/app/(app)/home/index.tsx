@@ -1,8 +1,7 @@
-// app/(tabs)/home.tsx
 import { View, FlatList, StyleSheet, SafeAreaView, ActivityIndicator, Text } from 'react-native';
 import { Link } from 'expo-router';
-import ProductCard from '../../components/ProductCard';
-import Header from '../../components/Header';
+import ProductCard from '../../../components/ProductCard';
+import Header from '../../../components/Header';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
