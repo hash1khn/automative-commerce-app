@@ -16,18 +16,24 @@ const productSchema = new mongoose.Schema({
   },
   rating: {
     type: Number,
-    default: 0, // Rating starts at 0
+    default: 0, 
     min: 0,
     max: 5,
   },
   images: [
     {
-      type: String, // Store URLs or file paths
+      type: String, 
       required: true,
     },
   ],
+  stock: {
+    type: Number,
+    required: true,
+    min: 0, // Ensure no negative stock
+    default: 10, // Default stock value
+  },
 }, {
-  timestamps: true, // Automatically add createdAt and updatedAt timestamps
+  timestamps: true,
 });
 
 module.exports = mongoose.model('Product', productSchema);

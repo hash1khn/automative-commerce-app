@@ -14,7 +14,7 @@ exports.createProduct = async (req, res) => {
         return res.status(400).json({ message: 'Images are required. Please upload at least one image.' });
       }
   
-      const { name, price, description, rating } = req.body;
+      const { name, price, description, rating,stock } = req.body;
   
       if (!name || !price || !description) {
         return res.status(400).json({ message: 'All fields (name, price, description) are required.' });
@@ -29,6 +29,7 @@ exports.createProduct = async (req, res) => {
         description,
         rating: rating || 0,
         images: imageUrls,
+        stock,
       });
   
       await product.save();
@@ -80,7 +81,7 @@ exports.getProductById = async (req, res) => {
  */
 exports.updateProduct = async (req, res) => {
     try {
-      const { name, price, description, rating } = req.body;
+      const { name, price, description, rating,stock } = req.body;
       let product = await Product.findById(req.params.id);
       if (!product) {
         return res.status(404).json({ message: 'Product not found.' });
@@ -91,6 +92,7 @@ exports.updateProduct = async (req, res) => {
       if (price !== undefined) product.price = price;
       if (description) product.description = description;
       if (rating !== undefined) product.rating = rating;
+      if (stock !== undefined) product.stock = stock;
   
       // ✅ If new images are uploaded, delete old ones and replace
       if (req.files && req.files.length > 0) {
