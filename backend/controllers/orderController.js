@@ -7,6 +7,11 @@ const Product = require('../models/Product');
  * @desc    Place an order from cart with discounts, tax, and shipping
  * @access  Private (Customer only)
  */
+/**
+ * @route   POST /api/orders/checkout
+ * @desc    Place an order with a fixed 5% tax and a 10% promo code discount
+ * @access  Private (Customer only)
+ */
 exports.placeOrder = async (req, res) => {
   try {
     const { promoCode, shippingAddress } = req.body;
@@ -17,55 +22,32 @@ exports.placeOrder = async (req, res) => {
       return res.status(400).json({ message: 'Your cart is empty.' });
     }
 
-    // Check stock availability before placing order
-    for (let item of cart.items) {
-      if (item.product.stock < item.quantity) {
-        return res.status(400).json({
-          message: `Not enough stock available for ${item.product.name}.`
-        });
-      }
-    }
+    // ✅ Apply 5% tax
+    const taxRate = 5;
+    const taxAmount = (cart.totalPrice * taxRate) / 100;
 
-    // Apply discount if promo code is valid
+    // ✅ Apply promo code (10% discount) if valid
     let discount = 0;
-    if (promoCode) {
-      const validDiscounts = {
-        'WELCOME10': { type: 'percentage', value: 10 },
-        'FLAT5': { type: 'fixed', value: 5 },
-      };
+    const validPromoCode = "DISCOUNT10"; // Fixed promo code for now
 
-      if (validDiscounts[promoCode]) {
-        const discountData = validDiscounts[promoCode];
-
-        if (discountData.type === 'percentage') {
-          discount = (cart.totalPrice * discountData.value) / 100;
-        } else if (discountData.type === 'fixed') {
-          discount = discountData.value;
-        }
-
-        // Ensure discount doesn't exceed total price
-        if (discount > cart.totalPrice) discount = cart.totalPrice;
-      }
+    if (promoCode && promoCode.toUpperCase() === validPromoCode) {
+      discount = (cart.totalPrice * 10) / 100;
     }
 
-    // Apply tax (8%)
-    const taxRate = 8;
-    const taxAmount = ((cart.totalPrice - discount) * taxRate) / 100;
-
-    // Apply shipping charge (flat $5)
+    // ✅ Apply shipping charge (flat $5)
     const shippingCharge = 5;
 
-    // Final total price
+    // ✅ Final total price
     const finalTotal = cart.totalPrice - discount + taxAmount + shippingCharge;
 
-    // Deduct stock
+    // ✅ Deduct stock
     for (let item of cart.items) {
       let product = await Product.findById(item.product._id);
       product.stock -= item.quantity;
       await product.save();
     }
 
-    // Create an order
+    // ✅ Create an order
     const order = new Order({
       user: req.user.id,
       items: cart.items.map(item => ({
@@ -82,7 +64,7 @@ exports.placeOrder = async (req, res) => {
 
     await order.save();
 
-    // Clear user's cart after order placement
+    // ✅ Clear user's cart after order placement
     await Cart.findOneAndDelete({ user: req.user.id });
 
     return res.status(201).json({
@@ -98,6 +80,7 @@ exports.placeOrder = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
 
 /**
  * @route   GET /api/orders
