@@ -14,6 +14,7 @@ interface Product {
   images: string[];
   createdAt: string;
   updatedAt: string;
+  stock: number;  
 }
 
 const API_URL = 'http://localhost:5000/api/products/get-all-products';
@@ -36,7 +37,9 @@ export default function HomeScreen() {
         });
         const cleanedProducts = response.data.map((product) => ({
           ...product,
-          images: product.images?.map((image) => image.replace(/"|<.*?>/g, '')).filter(Boolean) || [],
+          images: product.images
+            ?.map((image) => image.replace(/"|<.*?>/g, ''))
+            .filter(Boolean) || [],
         }));
         setProducts(cleanedProducts);
       } catch (error) {
@@ -46,7 +49,7 @@ export default function HomeScreen() {
         setLoading(false);
       }
     };
-  
+
     fetchProducts();
   }, []);
 
@@ -55,7 +58,7 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.container}>
         <Header />
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#0000ff" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -66,7 +69,7 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.container}>
         <Header />
         <View style={styles.centered}>
-          <Text>Error: {error}</Text>
+          <Text style={styles.errorText}>Error: {error}</Text>
         </View>
       </SafeAreaView>
     );
@@ -93,11 +96,20 @@ export default function HomeScreen() {
   );
 }
 
+const colors = {
+  primary: '#373D20',
+  secondary: '#717744',
+  accent: '#BCBD8B',
+  background: '#F5F5F5',
+  text: '#766153',
+  error: '#FF0000',
+};
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 15,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   centered: {
     flex: 1,
@@ -108,6 +120,12 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   productWrapper: {
-    marginBottom: 5,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 12,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 16,
   },
 });
