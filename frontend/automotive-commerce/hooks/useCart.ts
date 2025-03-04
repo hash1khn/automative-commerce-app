@@ -13,7 +13,7 @@ interface CartItem {
 
 interface Cart {
   items: CartItem[];
-  totalPrice: number;
+  totalPrice: number; 
 }
 
 // Fetch cart

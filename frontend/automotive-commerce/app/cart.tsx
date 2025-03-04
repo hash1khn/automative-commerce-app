@@ -1,11 +1,20 @@
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { useCart, useUpdateCart, useRemoveFromCart, useClearCart } from '../hooks/useCart';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { router } from 'expo-router'; // Import router for navigation
 
 export default function CartScreen() {
+  const { user } = useAuth(); // Get the user state
   const { data: cart, isLoading, isError } = useCart();
   const { mutate: updateCart } = useUpdateCart();
   const { mutate: removeFromCart } = useRemoveFromCart();
   const { mutate: clearCart } = useClearCart();
+
+  // Redirect to login if no user is logged in
+  if (!user) {
+    router.replace('/(auth)/login'); // Use replace to prevent going back to the cart screen
+    return null; // Return null to prevent rendering the rest of the component
+  }
 
   if (isLoading) {
     return (

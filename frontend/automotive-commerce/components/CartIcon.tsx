@@ -10,7 +10,7 @@ export default function CartIcon() {
 
   return (
     <Link href="/cart" asChild>
-      <TouchableOpacity style={{ position: 'relative', marginRight: 16 }}>
+      <TouchableOpacity style={{ position: 'relative', marginRight: 8 }}>
         {/* Wrap content in a single View */}
         <View>
           <MaterialIcons name="shopping-cart" size={28} color="white" />

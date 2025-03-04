@@ -4,6 +4,16 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../context/AuthContext'; // Import auth hook
 import axios from 'axios';
 
+// Define the color palette
+const colors = {
+  primary: '#373D20',
+  secondary: '#717744',
+  accent: '#BCBD8B',
+  background: '#F5F5F5',
+  text: '#766153',
+  error: '#FF0000',
+};
+
 export default function LoginScreen() {
   const { login } = useAuth(); // Use AuthContext
   const [email, setEmail] = useState('');
@@ -27,12 +37,13 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.formContainer}>
-        <Text style={styles.title}>Login</Text>
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>Login to continue</Text>
 
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#888"
+          placeholderTextColor={colors.text}
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -41,7 +52,7 @@ export default function LoginScreen() {
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#888"
+          placeholderTextColor={colors.text}
           secureTextEntry
           value={password}
           onChangeText={setPassword}
@@ -55,11 +66,12 @@ export default function LoginScreen() {
           <Text style={styles.buttonText}>Login</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.linkContainer}>
-          <Text style={styles.link} onPress={() => router.push('/(auth)/register')}>
-            Don't have an account? Register
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.linkContainer}>
+          <Text style={styles.linkText}>Don't have an account? </Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
+            <Text style={styles.link}>Register</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -70,64 +82,74 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   formContainer: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: colors.background,
+    borderRadius: 12,
     padding: 24,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: colors.primary,
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#222',
+    color: colors.primary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.text,
     marginBottom: 24,
-    alignSelf: 'center',
+    textAlign: 'center',
   },
   input: {
-    height: 45,
-    borderColor: '#ddd',
+    height: 50,
+    borderColor: colors.accent,
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: 8,
     paddingHorizontal: 16,
-    marginBottom: 12,
-    color: '#444',
-    backgroundColor: '#fff',
+    marginBottom: 16,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   forgotPasswordContainer: {
     alignSelf: 'flex-end',
     marginBottom: 16,
   },
   forgotPasswordText: {
-    color: '#A03048',
-    fontWeight: 'bold',
+    color: colors.secondary,
+    fontWeight: '600',
     textDecorationLine: 'underline',
   },
   button: {
-    backgroundColor: '#A03048',
-    borderRadius: 6,
-    paddingVertical: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.background,
     fontWeight: 'bold',
     fontSize: 16,
   },
   linkContainer: {
-    marginTop: 12,
+    marginTop: 16,
     flexDirection: 'row',
     justifyContent: 'center',
   },
+  linkText: {
+    color: colors.text,
+  },
   link: {
-    color: '#A03048',
-    fontWeight: 'bold',
+    color: colors.secondary,
+    fontWeight: '600',
     textDecorationLine: 'underline',
   },
 });

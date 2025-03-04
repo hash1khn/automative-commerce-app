@@ -3,6 +3,16 @@ import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import axios from 'axios'; // Import the API instance
 
+// Define the color palette
+const colors = {
+  primary: '#373D20',
+  secondary: '#717744',
+  accent: '#BCBD8B',
+  background: '#F5F5F5',
+  text: '#766153',
+  error: '#FF0000',
+};
+
 export default function RegisterScreen() {
   const router = useRouter();
 
@@ -14,12 +24,12 @@ export default function RegisterScreen() {
     confirmPassword: '',
   });
 
-
   const [loading, setLoading] = useState(false); // To disable button during API call
 
   const handleInputChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
   };
+
   const isValidPhoneNumber = (phone: string) => {
     const phoneRegex = /^\+?[1-9]\d{1,14}$/;
     return phoneRegex.test(phone);
@@ -70,19 +80,20 @@ export default function RegisterScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.formContainer}>
-        <Text style={styles.title}>Register</Text>
+        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.subtitle}>Join us to get started</Text>
 
         <TextInput
           style={styles.input}
           placeholder="Full Name"
-          placeholderTextColor="#888"
+          placeholderTextColor={colors.text}
           value={formData.name}
           onChangeText={(text) => handleInputChange('name', text)}
         />
         <TextInput
           style={styles.input}
           placeholder="Email"
-          placeholderTextColor="#888"
+          placeholderTextColor={colors.text}
           keyboardType="email-address"
           autoCapitalize="none"
           value={formData.email}
@@ -91,7 +102,7 @@ export default function RegisterScreen() {
         <TextInput
           style={styles.input}
           placeholder="Phone Number"
-          placeholderTextColor="#888"
+          placeholderTextColor={colors.text}
           keyboardType="phone-pad"
           value={formData.phone}
           onChangeText={(text) => handleInputChange('phone', text)}
@@ -99,7 +110,7 @@ export default function RegisterScreen() {
         <TextInput
           style={styles.input}
           placeholder="Password"
-          placeholderTextColor="#888"
+          placeholderTextColor={colors.text}
           secureTextEntry
           value={formData.password}
           onChangeText={(text) => handleInputChange('password', text)}
@@ -107,23 +118,30 @@ export default function RegisterScreen() {
         <TextInput
           style={styles.input}
           placeholder="Confirm Password"
-          placeholderTextColor="#888"
+          placeholderTextColor={colors.text}
           secureTextEntry
           value={formData.confirmPassword}
           onChangeText={(text) => handleInputChange('confirmPassword', text)}
         />
 
         {/* Register Button */}
-        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Registering...' : 'Register'}</Text>
+        <TouchableOpacity 
+          style={styles.button} 
+          onPress={handleSubmit} 
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? 'Registering...' : 'Register'}
+          </Text>
         </TouchableOpacity>
 
         {/* Login Link */}
-        <TouchableOpacity style={styles.linkContainer}>
-          <Link href="/(auth)/login" asChild>
-            <Text style={styles.link}>Already have an account? Login</Text>
-          </Link>
-        </TouchableOpacity>
+        <View style={styles.linkContainer}>
+          <Text style={styles.linkText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => router.push('/(auth)/login')}>
+            <Text style={styles.link}>Login</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -134,55 +152,65 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: colors.background,
   },
   formContainer: {
-    width: '80%',
-    backgroundColor: '#fff',
-    borderRadius: 10,
+    width: '90%',
+    maxWidth: 400,
+    backgroundColor: colors.background,
+    borderRadius: 12,
     padding: 24,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: colors.primary,
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#222',
+    color: colors.primary,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.text,
     marginBottom: 24,
-    alignSelf: 'center',
+    textAlign: 'center',
   },
   input: {
-    height: 45,
-    borderColor: '#ddd',
+    height: 50,
+    borderColor: colors.accent,
     borderWidth: 1,
-    borderRadius: 6,
+    borderRadius: 8,
     paddingHorizontal: 16,
-    marginBottom: 12,
-    color: '#444',
-    backgroundColor: '#fff',
+    marginBottom: 16,
+    color: colors.text,
+    backgroundColor: colors.background,
   },
   button: {
-    backgroundColor: '#A03048',
-    borderRadius: 6,
-    paddingVertical: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 8,
+    paddingVertical: 14,
     alignItems: 'center',
     marginTop: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.background,
     fontWeight: 'bold',
     fontSize: 16,
   },
   linkContainer: {
-    marginTop: 12,
+    marginTop: 16,
     flexDirection: 'row',
     justifyContent: 'center',
   },
+  linkText: {
+    color: colors.text,
+  },
   link: {
-    color: '#A03048',
-    fontWeight: 'bold',
+    color: colors.secondary,
+    fontWeight: '600',
     textDecorationLine: 'underline',
   },
 });
