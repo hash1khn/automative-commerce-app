@@ -2,7 +2,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { useCart, useUpdateCart, useRemoveFromCart, useClearCart } from '../hooks/useCart';
 import { useAuth } from '../context/AuthContext';
 import { router } from 'expo-router';
-  import Header from '../components/Header';
+import Header from '../components/Header';
 
 
 // Define the color palette
@@ -54,68 +54,71 @@ export default function CartScreen() {
   const total = cart.items.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
   return (
-    <View style={styles.container}>
-      <Header />
+    <>
+      <Header></Header>
+      <View style={styles.container}>
 
-      <FlatList
-        data={cart.items}
-        keyExtractor={(item) => item.product._id}
-        renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
-            <Image
-              source={{ uri: item.product.images[0] }}
-              style={styles.productImage}
-              resizeMode="contain"
-            />
-            <View style={styles.itemDetails}>
-              <Text style={styles.productName}>{item.product.name}</Text>
-              <Text style={styles.productPrice}>${item.product.price.toFixed(2)}</Text>
+        <FlatList
+          data={cart.items}
+          keyExtractor={(item) => item.product._id}
+          renderItem={({ item }) => (
+            <View style={styles.itemContainer}>
+              <Image
+                source={{ uri: item.product.images[0] }}
+                style={styles.productImage}
+                resizeMode="contain"
+              />
+              <View style={styles.itemDetails}>
+                <Text style={styles.productName}>{item.product.name}</Text>
+                <Text style={styles.productPrice}>${item.product.price.toFixed(2)}</Text>
 
-              <View style={styles.quantityContainer}>
+                <View style={styles.quantityContainer}>
+                  <TouchableOpacity
+                    onPress={() => updateCart({
+                      productId: item.product._id,
+                      quantity: Math.max(1, item.quantity - 1)
+                    })}
+                    style={styles.quantityButton}
+                  >
+                    <Text style={styles.quantityText}>-</Text>
+                  </TouchableOpacity>
+
+                  <Text style={styles.quantity}>{item.quantity}</Text>
+
+                  <TouchableOpacity
+                    onPress={() => updateCart({
+                      productId: item.product._id,
+                      quantity: item.quantity + 1
+                    })}
+                    style={styles.quantityButton}
+                  >
+                    <Text style={styles.quantityText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+
                 <TouchableOpacity
-                  onPress={() => updateCart({
-                    productId: item.product._id,
-                    quantity: Math.max(1, item.quantity - 1)
-                  })}
-                  style={styles.quantityButton}
+                  onPress={() => removeFromCart(item.product._id)}
+                  style={styles.removeButton}
                 >
-                  <Text style={styles.quantityText}>-</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.quantity}>{item.quantity}</Text>
-
-                <TouchableOpacity
-                  onPress={() => updateCart({
-                    productId: item.product._id,
-                    quantity: item.quantity + 1
-                  })}
-                  style={styles.quantityButton}
-                >
-                  <Text style={styles.quantityText}>+</Text>
+                  <Text style={styles.removeText}>Remove</Text>
                 </TouchableOpacity>
               </View>
-
-              <TouchableOpacity
-                onPress={() => removeFromCart(item.product._id)}
-                style={styles.removeButton}
-              >
-                <Text style={styles.removeText}>Remove</Text>
-              </TouchableOpacity>
             </View>
-          </View>
-        )}
-      />
+          )}
+        />
 
-      <View style={styles.totalContainer}>
-        <Text style={styles.totalText}>Total: ${total.toFixed(2)}</Text>
-        <TouchableOpacity
-          style={styles.checkoutButton}
-          onPress={() => router.push('/checkout')}
-        >
-          <Text style={styles.checkoutText}>Checkout</Text>
-        </TouchableOpacity>
+        <View style={styles.totalContainer}>
+          <Text style={styles.totalText}>Total: ${total.toFixed(2)}</Text>
+          <TouchableOpacity
+            style={styles.checkoutButton}
+            onPress={() => router.push('/checkout')}
+          >
+            <Text style={styles.checkoutText}>Checkout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </>
+
   );
 }
 
