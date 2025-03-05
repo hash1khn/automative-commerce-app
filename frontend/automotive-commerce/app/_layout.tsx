@@ -40,6 +40,14 @@ export default function RootLayout() {
               headerShown: false, // If you want a custom header
             }}
           />
+
+          <Stack.Screen
+            name="checkout"
+            options={{
+              title: 'Checkout',
+              headerShown: false, // If you want a custom header
+            }}
+          />
         </Stack>
       </QueryClientProvider>
     </AuthProvider>
