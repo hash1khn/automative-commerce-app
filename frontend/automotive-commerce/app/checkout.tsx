@@ -69,62 +69,65 @@ import {
     return (
       <SafeAreaView style={styles.container}>
         <Header />
-  
-        <FlatList
-          data={cart.items}
-          keyExtractor={(item) => item.product._id}
-          renderItem={({ item }) => (
-            <View style={styles.itemContainer}>
-              <Image
-                source={{ uri: item.product.images[0] }}
-                style={styles.productImage}
-                resizeMode="contain"
-              />
-              <View style={styles.itemDetails}>
-                <Text style={styles.productName}>{item.product.name}</Text>
-                <Text style={styles.productPrice}>
-                  ${item.product.price.toFixed(2)}
-                </Text>
-                <Text style={styles.quantityText}>Quantity: {item.quantity}</Text>
+        <View style={styles.wrapper}>
+          <FlatList
+            data={cart.items}
+            keyExtractor={(item) => item.product._id}
+            renderItem={({ item }) => (
+              <View style={styles.itemContainer}>
+                <Image
+                  source={{ uri: item.product.images[0] }}
+                  style={styles.productImage}
+                  resizeMode="contain"
+                />
+                <View style={styles.itemDetails}>
+                  <Text style={styles.productName}>{item.product.name}</Text>
+                  <Text style={styles.productPrice}>
+                    ${item.product.price.toFixed(2)}
+                  </Text>
+                  <Text style={styles.quantityText}>
+                    Quantity: {item.quantity}
+                  </Text>
+                </View>
               </View>
-            </View>
-          )}
-          contentContainerStyle={styles.flatListContent}
-          showsVerticalScrollIndicator={false}
-        />
-  
-        <View style={styles.totalContainer}>
-          <Text style={styles.totalText}>Total: ${total.toFixed(2)}</Text>
-        </View>
-  
-        <View style={styles.inputContainer}>
-          <Text style={styles.addressLabel}>Shipping Address *</Text>
-          <TextInput
-            style={styles.addressInput}
-            placeholder="Enter your shipping address"
-            placeholderTextColor={colors.text}
-            value={shippingAddress}
-            onChangeText={setShippingAddress}
+            )}
+            contentContainerStyle={styles.flatListContent}
+            showsVerticalScrollIndicator={false}
           />
-        </View>
   
-        <View style={styles.inputContainer}>
-          <Text style={styles.promoCodeLabel}>Promo Code (optional)</Text>
-          <TextInput
-            style={styles.promoCodeInput}
-            placeholder="Enter promo code"
-            placeholderTextColor={colors.text}
-            value={promoCode}
-            onChangeText={setPromoCode}
-          />
-        </View>
+          <View style={styles.totalContainer}>
+            <Text style={styles.totalText}>Total: ${total.toFixed(2)}</Text>
+          </View>
   
-        <TouchableOpacity
-          style={styles.paymentButton}
-          onPress={handleProceedToPayment}
-        >
-          <Text style={styles.paymentButtonText}>Proceed to Payment</Text>
-        </TouchableOpacity>
+          <View style={styles.inputContainer}>
+            <Text style={styles.addressLabel}>Shipping Address *</Text>
+            <TextInput
+              style={styles.addressInput}
+              placeholder="Enter your shipping address"
+              placeholderTextColor={colors.text}
+              value={shippingAddress}
+              onChangeText={setShippingAddress}
+            />
+          </View>
+  
+          <View style={styles.inputContainer}>
+            <Text style={styles.promoCodeLabel}>Promo Code (optional)</Text>
+            <TextInput
+              style={styles.promoCodeInput}
+              placeholder="Enter promo code"
+              placeholderTextColor={colors.text}
+              value={promoCode}
+              onChangeText={setPromoCode}
+            />
+          </View>
+  
+          <TouchableOpacity
+            style={styles.paymentButton}
+            onPress={handleProceedToPayment}
+          >
+            <Text style={styles.paymentButtonText}>Proceed to Payment</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -132,8 +135,10 @@ import {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      padding: 20,
       backgroundColor: colors.background,
+    },
+    wrapper: {
+      margin: 20, // Adds margins on all four sides
     },
     centered: {
       flex: 1,
