@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateJWT,adminCheck } = require('../middleware/authMiddleware');
+const { authenticateJWT, adminCheck } = require('../middleware/authMiddleware');
 const {
-  placeOrder,
+  validatePromoCode,
+  processPayment,
   getUserOrders,
   getAllOrders,
   updateOrderStatus
 } = require('../controllers/orderController');
 
-router.post('/checkout', authenticateJWT, placeOrder);
+router.post('/validate-promo', authenticateJWT, validatePromoCode);
+router.post('/payment', authenticateJWT, processPayment);
 router.get('/get-user-orders', authenticateJWT, getUserOrders);
 router.get('/all-orders', authenticateJWT, adminCheck, getAllOrders);
 router.put('/:id/update-order-status', authenticateJWT, adminCheck, updateOrderStatus);

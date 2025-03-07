@@ -23,38 +23,31 @@ const orderSchema = new mongoose.Schema({
       }
     }
   ],
-  totalPrice: { 
-    type: Number, 
+  totalPrice: { type: Number, required: true },
+  discount: { type: Number, default: 0 },
+  taxAmount: { type: Number, default: 0 },
+  shippingCharge: { type: Number, default: 5 },
+  shippingAddress: { 
+    type: String, 
     required: true 
-  },
-  discount: { 
-    type: Number, 
-    default: 0 
-  },
-  taxAmount: { 
-    type: Number, 
-    default: 0 
-  },
-  shippingCharge: { 
-    type: Number, 
-    default: 5 
-  },
-  shippingAddress: {
-    street: String,
-    city: String,
-    state: String,
-    postalCode: String,
-    country: String
   },
   status: { 
     type: String, 
-    enum: ['pending', 'shipped', 'delivered'], 
+    enum: ['pending', 'paid', 'failed', 'shipped', 'delivered'], 
     default: 'pending' 
   },
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-  }
+  paymentStatus: { 
+    type: String, 
+    enum: ['pending', 'successful', 'failed'], 
+    default: 'pending' 
+  },
+  paymentMethod: { type: String, default: 'card' },
+  paymentDetails: {
+    cardNumber: String, // Only store last 4 digits
+    expiryDate: String,
+    cardHolderName: String
+  },
+  createdAt: { type: Date, default: Date.now }
 });
 
 module.exports = mongoose.model('Order', orderSchema);

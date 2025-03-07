@@ -1,86 +1,119 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
+const { simulateCardPayment } = require('../utils/paymentSimulator');
+const sendEmail =require('../utils/emailHelper');
 
 /**
- * @route   POST /api/orders/checkout
- * @desc    Place an order from cart with discounts, tax, and shipping
+ * @route   POST /api/orders/validate-promo
+ * @desc    Validate promo code and return discount amount
  * @access  Private (Customer only)
  */
-/**
- * @route   POST /api/orders/checkout
- * @desc    Place an order with a fixed 5% tax and a 10% promo code discount
- * @access  Private (Customer only)
- */
-exports.placeOrder = async (req, res) => {
+exports.validatePromoCode = async (req, res) => {
   try {
-    const { promoCode, shippingAddress } = req.body;
+    const { promoCode, subtotal } = req.body;
 
-    const cart = await Cart.findOne({ user: req.user.id }).populate('items.product');
-
-    if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: 'Your cart is empty.' });
+    if (!subtotal || subtotal <= 0) {
+      return res.status(400).json({ message: 'Invalid subtotal amount.' });
     }
-
-    // ✅ Apply 5% tax
-    const taxRate = 5;
-    const taxAmount = (cart.totalPrice * taxRate) / 100;
 
     // ✅ Apply promo code (10% discount) if valid
     let discount = 0;
-    const validPromoCode = "DISCOUNT10"; // Fixed promo code for now
-
+    const validPromoCode = "DISCOUNT10";
     if (promoCode && promoCode.toUpperCase() === validPromoCode) {
-      discount = (cart.totalPrice * 10) / 100;
+      discount = (subtotal * 10) / 100;
     }
 
-    // ✅ Apply shipping charge (flat $5)
-    const shippingCharge = 5;
-
-    // ✅ Final total price
-    const finalTotal = cart.totalPrice - discount + taxAmount + shippingCharge;
-
-    // ✅ Deduct stock
-    for (let item of cart.items) {
-      let product = await Product.findById(item.product._id);
-      product.stock -= item.quantity;
-      await product.save();
-    }
-
-    // ✅ Create an order
-    const order = new Order({
-      user: req.user.id,
-      items: cart.items.map(item => ({
-        product: item.product._id,
-        quantity: item.quantity,
-        price: item.product.price
-      })),
-      totalPrice: finalTotal,
-      discount,
-      taxAmount,
-      shippingCharge,
-      shippingAddress,
-    });
-
-    await order.save();
-
-    // ✅ Clear user's cart after order placement
-    await Cart.findOneAndDelete({ user: req.user.id });
-
-    return res.status(201).json({
-      message: 'Order placed successfully',
-      order,
-      appliedDiscount: discount,
-      taxAmount,
-      shippingCharge,
-      finalTotal
+    return res.status(200).json({
+      message: discount > 0 ? 'Promo code applied successfully!' : 'Invalid promo code.',
+      discount
     });
   } catch (error) {
-    console.error('Place Order Error:', error);
+    console.error('Validate Promo Code Error:', error);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
 
+/**
+ * @route   POST /api/orders/payment
+ * @desc    Process payment and create order
+ * @access  Private (Customer only)
+ */
+exports.processPayment = async (req, res) => {
+  try {
+    const { cartItems, totalAmount, shippingAddress, cardDetails } = req.body;
+
+    if (!cartItems || cartItems.length === 0) {
+      return res.status(400).json({ message: 'Your cart is empty.' });
+    }
+
+    // ✅ Simulate payment processing
+    const paymentResult = simulateCardPayment(cardDetails, totalAmount);
+
+    if (!paymentResult.success) {
+      return res.status(400).json({ message: 'Payment failed.', error: paymentResult.message });
+    }
+
+    // ✅ Create order after successful payment
+    const order = new Order({
+      user: req.user.id,
+      items: cartItems.map(item => ({
+        product: item.productId,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      totalPrice: totalAmount,
+      taxAmount: (totalAmount * 5) / 100,
+      shippingCharge: 5,
+      shippingAddress: shippingAddress, // Now a single field
+      status: "paid",
+      paymentStatus: "successful",
+      paymentDetails: {
+        cardNumber: cardDetails.cardNumber.slice(-4),
+        expiryDate: cardDetails.expiryDate,
+        cardHolderName: cardDetails.cardHolderName
+      }
+    });
+
+    await order.save();
+
+    // ✅ Deduct stock after successful payment
+    for (let item of cartItems) {
+      let product = await Product.findById(item.productId);
+      product.stock -= item.quantity;
+      await product.save();
+    }
+
+    // ✅ Clear user's cart
+    await Cart.findOneAndDelete({ user: req.user.id });
+
+    // ✅ Send Order Confirmation Email
+    await sendEmail({
+      to: req.user.email,
+      subject: 'Order Confirmation',
+      text: `Thank you for your purchase! Your order ID is ${order._id}.
+
+Order Summary:
+--------------------
+Total Price: $${order.totalPrice}
+Shipping Address: ${order.shippingAddress}
+
+Items:
+${order.items.map(item => `- ${item.product.name} (Qty: ${item.quantity}) - $${item.price}`).join('\n')}
+
+Thank you for shopping with us!`,
+    });
+
+    return res.status(200).json({
+      message: 'Payment successful. Order placed!',
+      order,
+      paymentStatus: "successful"
+    });
+  } catch (error) {
+    console.error('Payment Processing Error:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};
 
 /**
  * @route   GET /api/orders
