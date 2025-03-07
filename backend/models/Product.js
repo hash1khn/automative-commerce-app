@@ -1,39 +1,20 @@
 const mongoose = require('mongoose');
 
+const reviewSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  rating: { type: Number, required: true, min: 1, max: 5 },
+  comment: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
 const productSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'Product name is required'],
-  },
-  price: {
-    type: Number,
-    required: [true, 'Price is required'],
-    min: 0,
-  },
-  description: {
-    type: String,
-    required: [true, 'Product description is required'],
-  },
-  rating: {
-    type: Number,
-    default: 0, 
-    min: 0,
-    max: 5,
-  },
-  images: [
-    {
-      type: String, 
-      required: true,
-    },
-  ],
-  stock: {
-    type: Number,
-    required: true,
-    min: 0, // Ensure no negative stock
-    default: 10, // Default stock value
-  },
-}, {
-  timestamps: true,
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  description: { type: String, required: true },
+  stock: { type: Number, required: true },
+  images: [{ type: String }],
+  reviews: [reviewSchema], // Embedding reviews in product schema
+  averageRating: { type: Number, default: 0 }
 });
 
 module.exports = mongoose.model('Product', productSchema);
