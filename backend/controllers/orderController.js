@@ -1,8 +1,8 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
-const { simulateCardPayment } = require('../utils/paymentSimulator');
-const sendEmail =require('../utils/emailHelper');
+const { simulateCardPayment, simulateUPIPayment, simulatePayPalPayment } = require('../utils/paymentSimulator');
+const sendEmail = require('../utils/emailHelper');
 
 /**
  * @route   POST /api/orders/validate-promo
@@ -41,17 +41,66 @@ exports.validatePromoCode = async (req, res) => {
  */
 exports.processPayment = async (req, res) => {
   try {
-    const { cartItems, totalAmount, shippingAddress, cardDetails } = req.body;
+    const { cartItems, totalAmount, shippingAddress, paymentMethod, paymentDetails } = req.body;
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(400).json({ message: 'Your cart is empty.' });
     }
 
-    // ✅ Simulate payment processing
-    const paymentResult = simulateCardPayment(cardDetails, totalAmount);
+    if (!paymentMethod || !paymentDetails) {
+      return res.status(400).json({ message: 'Payment information is required.' });
+    }
+
+    // ✅ Validate payment method
+    if (!['card', 'upi', 'paypal'].includes(paymentMethod)) {
+      return res.status(400).json({ message: 'Invalid payment method.' });
+    }
+
+    // ✅ Process payment based on selected method
+    let paymentResult;
+    let paymentInfo = {};
+
+    switch (paymentMethod) {
+      case 'card':
+        paymentResult = simulateCardPayment(paymentDetails, totalAmount);
+        if (paymentResult.success) {
+          paymentInfo = {
+            method: 'card',
+            cardType: paymentResult.cardType,
+            last4: paymentResult.last4,
+            cardHolderName: paymentDetails.cardHolderName
+          };
+        }
+        break;
+      
+      case 'upi':
+        paymentResult = simulateUPIPayment(paymentDetails, totalAmount);
+        if (paymentResult.success) {
+          paymentInfo = {
+            method: 'upi',
+            upiId: paymentDetails.upiId,
+            referenceNumber: paymentResult.referenceNumber
+          };
+        }
+        break;
+      
+      case 'paypal':
+        paymentResult = simulatePayPalPayment(paymentDetails, totalAmount);
+        if (paymentResult.success) {
+          paymentInfo = {
+            method: 'paypal',
+            email: paymentDetails.email,
+          };
+        }
+        break;
+    }
 
     if (!paymentResult.success) {
-      return res.status(400).json({ message: 'Payment failed.', error: paymentResult.message });
+      return res.status(400).json({ 
+        message: 'Payment failed.', 
+        error: paymentResult.message,
+        errorCode: paymentResult.errorCode || 'PAYMENT_FAILED'
+      });
     }
 
     // ✅ Create order after successful payment
@@ -65,14 +114,13 @@ exports.processPayment = async (req, res) => {
       totalPrice: totalAmount,
       taxAmount: (totalAmount * 5) / 100,
       shippingCharge: 5,
-      shippingAddress: shippingAddress, // Now a single field
+      shippingAddress: shippingAddress,
       status: "paid",
       paymentStatus: "successful",
-      paymentDetails: {
-        cardNumber: cardDetails.cardNumber.slice(-4),
-        expiryDate: cardDetails.expiryDate,
-        cardHolderName: cardDetails.cardHolderName
-      }
+      paymentMethod: paymentMethod,
+      transactionId: paymentResult.transactionId,
+      paymentDetails: paymentInfo,
+      paymentTimestamp: paymentResult.timestamp || new Date().toISOString()
     });
 
     await order.save();
@@ -88,6 +136,12 @@ exports.processPayment = async (req, res) => {
     await Cart.findOneAndDelete({ user: req.user.id });
 
     // ✅ Send Order Confirmation Email
+    const paymentMethodText = {
+      'card': `Credit Card (${paymentInfo.cardType} ending in ${paymentInfo.last4})`,
+      'upi': `UPI (${paymentInfo.upiId})`,
+      'paypal': `PayPal (${paymentInfo.email})`
+    };
+
     await sendEmail({
       to: req.user.email,
       subject: 'Order Confirmation',
@@ -97,6 +151,8 @@ Order Summary:
 --------------------
 Total Price: $${order.totalPrice}
 Shipping Address: ${order.shippingAddress}
+Payment Method: ${paymentMethodText[paymentMethod]}
+Transaction ID: ${paymentResult.transactionId}
 
 Items:
 ${order.items.map(item => `- ${item.product.name} (Qty: ${item.quantity}) - $${item.price}`).join('\n')}
@@ -107,14 +163,14 @@ Thank you for shopping with us!`,
     return res.status(200).json({
       message: 'Payment successful. Order placed!',
       order,
-      paymentStatus: "successful"
+      paymentStatus: "successful",
+      transactionId: paymentResult.transactionId
     });
   } catch (error) {
     console.error('Payment Processing Error:', error);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
-
 /**
  * @route   GET /api/orders
  * @desc    Get all orders for a user

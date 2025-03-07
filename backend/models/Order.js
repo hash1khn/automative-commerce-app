@@ -41,13 +41,51 @@ const orderSchema = new mongoose.Schema({
     enum: ['pending', 'successful', 'failed'], 
     default: 'pending' 
   },
-  paymentMethod: { type: String, default: 'card' },
-  paymentDetails: {
-    cardNumber: String, // Only store last 4 digits
-    expiryDate: String,
-    cardHolderName: String
+  paymentMethod: { 
+    type: String, 
+    enum: ['card', 'upi', 'paypal'], 
+    required: true 
   },
-  createdAt: { type: Date, default: Date.now }
+  transactionId: { 
+    type: String,
+    trim: true
+  },
+  paymentDetails: {
+    // Card payment fields
+    cardType: String,
+    last4: String,
+    cardHolderName: String,
+    
+    // PayPal payment fields
+    email: String,
+    
+    // UPI payment fields
+    upiId: String,
+    referenceNumber: String,
+    
+    // Generic payment fields
+    method: {
+      type: String,
+      enum: ['card', 'upi', 'paypal'],
+      required: true
+    }
+  },
+  paymentTimestamp: { 
+    type: Date
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
+
+// Update the updatedAt field on save
+orderSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Create indexes for faster queries
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ transactionId: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);
