@@ -113,13 +113,6 @@ exports.simulateCardPayment = (cardDetails, amount) => {
  * @param {Number} amount - Order total amount
  * @returns {Object} Payment response
  */
-exports.processPayment = (paymentMethod, paymentDetails, amount) => {
-  if (paymentMethod.toLowerCase() !== 'card') {
-    return {
-      success: false,
-      message: "Only card payments are supported.",
-      errorCode: "INVALID_METHOD"
-    };
-  }
+exports.processPayment = (paymentDetails, amount) => {
   return exports.simulateCardPayment(paymentDetails, amount);
 };

@@ -1,7 +1,7 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
-const { simulateCardPayment, simulateUPIPayment, simulatePayPalPayment } = require('../utils/paymentSimulator');
+const { simulateCardPayment } = require('../utils/paymentSimulator');
 const sendEmail = require('../utils/emailHelper');
 
 /**
@@ -33,38 +33,21 @@ exports.validatePromoCode = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
-
 /**
  * @route   POST /api/orders/payment
- * @desc    Process payment and create order
- * @access  Private (Customer only)
- */
-const { simulateCardPayment } = require('../utils/paymentSimulator');
-const Order = require('../models/Order');
-const Cart = require('../models/Cart');
-const Product = require('../models/Product');
-const { sendEmail } = require('../utils/emailService');
-
-/**
- * @route   POST /api/orders/payment
- * @desc    Process payment (Only Card Payment Supported)
+ * @desc    Process payment (Only Credit/Debit Card)
  * @access  Private (Customer only)
  */
 exports.processPayment = async (req, res) => {
   try {
-    const { cartItems, totalAmount, shippingAddress, paymentMethod, paymentDetails } = req.body;
+    const { cartItems, totalAmount, shippingAddress, paymentDetails } = req.body;
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(400).json({ message: 'Your cart is empty.' });
     }
 
-    if (!paymentMethod || !paymentDetails) {
-      return res.status(400).json({ message: 'Payment information is required.' });
-    }
-
-    // ✅ Validate payment method (Only "card" is allowed)
-    if (paymentMethod !== 'card') {
-      return res.status(400).json({ message: 'Only credit/debit card payments are supported.' });
+    if (!paymentDetails) {
+      return res.status(400).json({ message: 'Payment details are required.' });
     }
 
     // ✅ Process Card Payment
@@ -80,7 +63,6 @@ exports.processPayment = async (req, res) => {
 
     // ✅ Prepare Payment Details
     const paymentInfo = {
-      method: 'card',
       cardType: paymentResult.cardType,
       last4: paymentResult.last4,
       cardHolderName: paymentDetails.cardHolderName
@@ -100,7 +82,6 @@ exports.processPayment = async (req, res) => {
       shippingAddress,
       status: "paid",
       paymentStatus: "successful",
-      paymentMethod: "card",
       transactionId: paymentResult.transactionId,
       paymentDetails: paymentInfo,
       paymentTimestamp: paymentResult.timestamp || new Date().toISOString()
@@ -150,6 +131,7 @@ Thank you for shopping with us!`,
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
 
 /**
  * @route   GET /api/orders
