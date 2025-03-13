@@ -39,6 +39,17 @@ exports.validatePromoCode = async (req, res) => {
  * @desc    Process payment and create order
  * @access  Private (Customer only)
  */
+const { simulateCardPayment } = require('../utils/paymentSimulator');
+const Order = require('../models/Order');
+const Cart = require('../models/Cart');
+const Product = require('../models/Product');
+const { sendEmail } = require('../utils/emailService');
+
+/**
+ * @route   POST /api/orders/payment
+ * @desc    Process payment (Only Card Payment Supported)
+ * @access  Private (Customer only)
+ */
 exports.processPayment = async (req, res) => {
   try {
     const { cartItems, totalAmount, shippingAddress, paymentMethod, paymentDetails } = req.body;
@@ -51,59 +62,31 @@ exports.processPayment = async (req, res) => {
       return res.status(400).json({ message: 'Payment information is required.' });
     }
 
-    // ✅ Validate payment method
-    if (!['card', 'upi', 'paypal'].includes(paymentMethod)) {
-      return res.status(400).json({ message: 'Invalid payment method.' });
+    // ✅ Validate payment method (Only "card" is allowed)
+    if (paymentMethod !== 'card') {
+      return res.status(400).json({ message: 'Only credit/debit card payments are supported.' });
     }
 
-    // ✅ Process payment based on selected method
-    let paymentResult;
-    let paymentInfo = {};
-
-    switch (paymentMethod) {
-      case 'card':
-        paymentResult = simulateCardPayment(paymentDetails, totalAmount);
-        if (paymentResult.success) {
-          paymentInfo = {
-            method: 'card',
-            cardType: paymentResult.cardType,
-            last4: paymentResult.last4,
-            cardHolderName: paymentDetails.cardHolderName
-          };
-        }
-        break;
-      
-      case 'upi':
-        paymentResult = simulateUPIPayment(paymentDetails, totalAmount);
-        if (paymentResult.success) {
-          paymentInfo = {
-            method: 'upi',
-            upiId: paymentDetails.upiId,
-            referenceNumber: paymentResult.referenceNumber
-          };
-        }
-        break;
-      
-      case 'paypal':
-        paymentResult = simulatePayPalPayment(paymentDetails, totalAmount);
-        if (paymentResult.success) {
-          paymentInfo = {
-            method: 'paypal',
-            email: paymentDetails.email,
-          };
-        }
-        break;
-    }
+    // ✅ Process Card Payment
+    const paymentResult = simulateCardPayment(paymentDetails, totalAmount);
 
     if (!paymentResult.success) {
-      return res.status(400).json({ 
-        message: 'Payment failed.', 
+      return res.status(400).json({
+        message: 'Payment failed.',
         error: paymentResult.message,
         errorCode: paymentResult.errorCode || 'PAYMENT_FAILED'
       });
     }
 
-    // ✅ Create order after successful payment
+    // ✅ Prepare Payment Details
+    const paymentInfo = {
+      method: 'card',
+      cardType: paymentResult.cardType,
+      last4: paymentResult.last4,
+      cardHolderName: paymentDetails.cardHolderName
+    };
+
+    // ✅ Create Order after successful payment
     const order = new Order({
       user: req.user.id,
       items: cartItems.map(item => ({
@@ -114,10 +97,10 @@ exports.processPayment = async (req, res) => {
       totalPrice: totalAmount,
       taxAmount: (totalAmount * 5) / 100,
       shippingCharge: 5,
-      shippingAddress: shippingAddress,
+      shippingAddress,
       status: "paid",
       paymentStatus: "successful",
-      paymentMethod: paymentMethod,
+      paymentMethod: "card",
       transactionId: paymentResult.transactionId,
       paymentDetails: paymentInfo,
       paymentTimestamp: paymentResult.timestamp || new Date().toISOString()
@@ -128,20 +111,16 @@ exports.processPayment = async (req, res) => {
     // ✅ Deduct stock after successful payment
     for (let item of cartItems) {
       let product = await Product.findById(item.productId);
-      product.stock -= item.quantity;
-      await product.save();
+      if (product) {
+        product.stock -= item.quantity;
+        await product.save();
+      }
     }
 
     // ✅ Clear user's cart
     await Cart.findOneAndDelete({ user: req.user.id });
 
     // ✅ Send Order Confirmation Email
-    const paymentMethodText = {
-      'card': `Credit Card (${paymentInfo.cardType} ending in ${paymentInfo.last4})`,
-      'upi': `UPI (${paymentInfo.upiId})`,
-      'paypal': `PayPal (${paymentInfo.email})`
-    };
-
     await sendEmail({
       to: req.user.email,
       subject: 'Order Confirmation',
@@ -151,7 +130,7 @@ Order Summary:
 --------------------
 Total Price: $${order.totalPrice}
 Shipping Address: ${order.shippingAddress}
-Payment Method: ${paymentMethodText[paymentMethod]}
+Payment Method: Credit Card (${paymentInfo.cardType} ending in ${paymentInfo.last4})
 Transaction ID: ${paymentResult.transactionId}
 
 Items:
@@ -171,6 +150,7 @@ Thank you for shopping with us!`,
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
 /**
  * @route   GET /api/orders
  * @desc    Get all orders for a user
