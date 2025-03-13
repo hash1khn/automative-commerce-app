@@ -176,19 +176,45 @@ Thank you for shopping with us!`,
  * @desc    Get all orders for a user
  * @access  Private (Customer/Admin)
  */
+/**
+ * @route   GET /api/orders/get-user-orders
+ * @desc    Get all orders for a user & count order statuses
+ * @access  Private (Customer only)
+ */
 exports.getUserOrders = async (req, res) => {
   try {
+    // Fetch all orders for the logged-in user
     const orders = await Order.find({ user: req.user.id }).populate('items.product');
+
     if (!orders.length) {
       return res.status(404).json({ message: 'No orders found.' });
     }
 
-    return res.status(200).json(orders);
+    // ✅ Count each order status
+    const statusCounts = {
+      processing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0
+    };
+
+    orders.forEach(order => {
+      if (statusCounts[order.status] !== undefined) {
+        statusCounts[order.status]++;
+      }
+    });
+
+    return res.status(200).json({ 
+      orders, 
+      statusCounts 
+    });
+
   } catch (error) {
     console.error('Get Orders Error:', error);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
 
 /**
  * @route   GET /api/orders/all
