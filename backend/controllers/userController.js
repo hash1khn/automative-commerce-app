@@ -9,17 +9,75 @@ const User = require('../models/User');
  */
 exports.getProfile = async (req, res) => {
   try {
+    // ✅ Fetch user profile (excluding password)
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
-    return res.status(200).json({ user });
+
+    // ✅ Count the number of orders in each status category
+    const statusCounts = await Order.aggregate([
+      { $match: { user: req.user.id } }, // Filter orders by the logged-in user
+      { $group: { _id: "$status", count: { $sum: 1 } } } // Count each order status
+    ]);
+
+    // ✅ Convert the aggregation result to an object
+    const orderStatusCounts = {
+      processing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0
+    };
+
+    statusCounts.forEach(status => {
+      orderStatusCounts[status._id] = status.count;
+    });
+
+    return res.status(200).json({
+      user,
+      orderStatusCounts
+    });
+
+  } catch (error) {
+    console.error('Get profile error:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};exports.getProfile = async (req, res) => {
+  try {
+    // ✅ Fetch user profile (excluding password)
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // ✅ Count the number of orders in each status category
+    const statusCounts = await Order.aggregate([
+      { $match: { user: req.user.id } }, // Filter orders by the logged-in user
+      { $group: { _id: "$status", count: { $sum: 1 } } } // Count each order status
+    ]);
+
+    // ✅ Convert the aggregation result to an object
+    const orderStatusCounts = {
+      processing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0
+    };
+
+    statusCounts.forEach(status => {
+      orderStatusCounts[status._id] = status.count;
+    });
+
+    return res.status(200).json({
+      user,
+      orderStatusCounts
+    });
+
   } catch (error) {
     console.error('Get profile error:', error);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
-
 /**
  * @route   PUT /api/users/me
  * @desc    Update the user's profile (name, phone, password)
