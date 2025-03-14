@@ -1,6 +1,6 @@
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
+import PropTypes from 'prop-types';
 
-// Define the color palette
 const colors = {
   primary: '#373D20',
   secondary: '#717744',
@@ -23,39 +23,41 @@ interface Product {
 }
 
 interface ProductCardProps {
-  product: Product;
+  product?: Product;
   onPress?: () => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
+  if (!product) return null;
+
+  const rating = product.rating?.toFixed(1) || '0.0';
+  const price = product.price?.toFixed(2) || '0.00';
+  const stock = product.stock || 0;
+
   const renderStockMessage = (stock: number) => {
     if (stock === 0) {
-      return (
-        <Text style={styles.stockMessageOut}>Out of Stock</Text>
-      );
+      return <Text style={styles.stockMessageOut}>Out of Stock</Text>;
     } else if (stock <= 10) {
-      return (
-        <Text style={styles.stockMessageLow}>Only {stock} left!</Text>
-      );
-    } else {
-      return (
-        <Text style={styles.stockMessageIn}>In Stock</Text>
-      );
+      return <Text style={styles.stockMessageLow}>Only {stock} left!</Text>;
     }
+    return <Text style={styles.stockMessageIn}>In Stock</Text>;
   };
 
   return (
     <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
       <Image
-        source={product.images[0] ? { uri: product.images[0] } : require('../assets/images/product-placeholder.png')}
+        source={{
+          uri: product.images?.[0] || 'https://via.placeholder.com/150',
+        }}
         style={styles.productImage}
+        onError={(e) => console.log('Image error:', e.nativeEvent.error)}
       />
       <View style={styles.cardContent}>
         <Text style={styles.productName}>{product.name}</Text>
-        <Text style={styles.productPrice}>${product.price.toFixed(2)}</Text>
+        <Text style={styles.productPrice}>${price}</Text>
         <View style={styles.ratingContainer}>
-          <Text style={styles.productRating}>⭐ {product.rating.toFixed(1)}</Text>
-          {renderStockMessage(product.stock)}
+          <Text style={styles.productRating}>⭐ {rating}</Text>
+          {renderStockMessage(stock)}
         </View>
       </View>
     </TouchableOpacity>

@@ -2,6 +2,7 @@ import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'reac
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import axios from 'axios'; // Import the API instance
+import Toast from 'react-native-toast-message'; // Import Toast
 
 // Define the color palette
 const colors = {
@@ -31,25 +32,73 @@ export default function RegisterScreen() {
   };
 
   const isValidPhoneNumber = (phone: string) => {
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    const phoneRegex = /^\+92\d{10}$/; // Ensure phone starts with +92 and has 10 digits
     return phoneRegex.test(phone);
   };
 
   const handleSubmit = async () => {
     const { name, email, phone, password, confirmPassword } = formData;
 
+    // Field presence check
     if (!name || !email || !phone || !password || !confirmPassword) {
       Alert.alert('Error', 'All fields are required');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'All fields are required',
+        visibilityTime: 3000,
+      });
       return;
     }
 
+    // Password match check
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Passwords do not match',
+        visibilityTime: 3000,
+      });
       return;
     }
 
-    if (phone && !isValidPhoneNumber(phone)) {
-      Alert.alert('Error', 'Invalid phone number format. Use international format (e.g., +1234567890)');
+    // Phone number validation
+    if (!isValidPhoneNumber(phone)) {
+      Alert.alert(
+        'Invalid Phone Number',
+        'Phone number must start with +92 followed by 10 digits\nExample: +921234567890'
+      );
+      Toast.show({
+        type: 'error',
+        text1: 'Invalid Phone Number',
+        text2: 'Phone number must start with +92 followed by 10 digits',
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
+    // Email validation
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Please enter a valid email address',
+        visibilityTime: 3000,
+      });
+      return;
+    }
+
+    // Password strength check
+    if (password.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters long');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Password must be at least 8 characters long',
+        visibilityTime: 3000,
+      });
       return;
     }
 
@@ -66,12 +115,31 @@ export default function RegisterScreen() {
 
       if (response.status === 201) {
         Alert.alert('Success', 'Account created successfully! Please login.');
-        router.replace('/(auth)/check-email'); // Redirect to login
+        Toast.show({
+          type: 'success',
+          text1: 'Success',
+          text2: 'Account created successfully! Please login.',
+          visibilityTime: 3000,
+        });
+        router.replace('/(auth)/check-email');
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Something went wrong';
+      // Enhanced error handling
+      let errorMessage = 'Registration failed. Please try again.';
+
+      if (axios.isAxiosError(err)) {
+        errorMessage = err.response?.data?.message || err.message;
+      } else if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
       Alert.alert('Registration Failed', errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Registration Failed',
+        text2: errorMessage,
+        visibilityTime: 3000,
+      });
     } finally {
       setLoading(false);
     }
@@ -125,9 +193,9 @@ export default function RegisterScreen() {
         />
 
         {/* Register Button */}
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={handleSubmit} 
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit}
           disabled={loading}
         >
           <Text style={styles.buttonText}>
@@ -143,6 +211,7 @@ export default function RegisterScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      <Toast /> {/* Add the Toast component here */}
     </View>
   );
 }
