@@ -72,6 +72,15 @@ export default function ProductDetailScreen() {
     );
   }
 
+  if (!product) {
+    return (
+      <View style={styles.centered}>
+        <Text>Loading product details...</Text>
+      </View>
+    );
+  }
+
+
   const renderStockMessage = (stock: number) => {
     if (stock === 0) {
       return (
@@ -106,13 +115,13 @@ export default function ProductDetailScreen() {
           </View>
           <View style={styles.productInfo}>
             <Text style={styles.productName}>{product.name}</Text>
-            <Text style={styles.productPrice}>$ {product.price.toFixed(2)}</Text>
+            <Text style={styles.productPrice}>$ {product?.price ? product.price.toFixed(2) : 'N/A'}</Text>
             <Text style={styles.productDescription}>{product.description}</Text>
             <View style={styles.ratingContainer}>
-              <Text style={styles.productRating}>⭐ {product.rating.toFixed(1)}</Text>
+              <Text style={styles.productRating}>⭐ {product?.rating ? product.rating.toFixed(1) : 'N/A'}</Text>
               <Text style={styles.ratingText}>Based on 45 reviews</Text>
             </View>
-            
+
             {/* Stock Information */}
             <View style={styles.stockContainer}>
               {renderStockMessage(product.stock)}
