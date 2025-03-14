@@ -10,8 +10,8 @@ const {
   closeTicket
 } = require('../controllers/ticketController');
 
-router.post('/', authenticateJWT, createTicket); // Create ticket
-router.get('/', authenticateJWT, getUserTickets); // User gets their tickets
+router.post('/create-ticket', authenticateJWT, createTicket); // Create ticket
+router.get('/get-user-tickets', authenticateJWT, getUserTickets); // User gets their tickets
 router.get('/all', authenticateJWT, adminCheck, getAllTickets); // Admin gets all tickets
 router.post('/:id/respond', authenticateJWT, respondToTicket); // Add response
 router.put('/:id/resolve', authenticateJWT, resolveTicket); // Resolve ticket (User/Admin)
