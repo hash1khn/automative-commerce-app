@@ -1,18 +1,18 @@
 // app/(app)/_layout.tsx
 import { Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router'; // Import useRouter
+import { useRouter } from 'expo-router';
 
 export default function AppLayout() {
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
 
   return (
     <Stack>
-      {/* Tabs Navigator (Home and Profile) */}
+      {/* Main Tabs Navigator */}
       <Stack.Screen
         name="(tabs)"
         options={{
-          headerShown: false, // Hide header for the tabs navigator
+          headerShown: false // Hide header for the tabs navigator
         }}
       />
 
@@ -20,14 +20,13 @@ export default function AppLayout() {
       <Stack.Screen
         name="product/[id]"
         options={{
-          headerShown: true, // Show header for the product details page
-          headerTitle: 'Product Details', // Optional: Set a title
+          headerTitle: 'Product Details',
           headerLeft: () => (
             <Ionicons
               name="arrow-back"
               size={24}
               color="black"
-              onPress={() => router.back()} // Custom back button
+              onPress={() => router.back()}
             />
           ),
         }}
