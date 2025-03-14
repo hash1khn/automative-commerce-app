@@ -14,7 +14,7 @@ exports.createProduct = async (req, res) => {
         return res.status(400).json({ message: 'Images are required. Please upload at least one image.' });
       }
   
-      const { name, price, description, rating,stock } = req.body;
+      const { name, price, description,stock } = req.body;
   
       if (!name || !price || !description) {
         return res.status(400).json({ message: 'All fields (name, price, description) are required.' });
@@ -27,7 +27,6 @@ exports.createProduct = async (req, res) => {
         name,
         price,
         description,
-        rating: rating || 0,
         images: imageUrls,
         stock,
       });
@@ -48,7 +47,7 @@ exports.createProduct = async (req, res) => {
  */
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find().sort({ createdAt: -1 }); // Sort by latest products first
+    const products = await Product.find().select('name price images stock averageRating').sort({ createdAt: -1 }); // Sort by latest products first
     return res.status(200).json(products);
   } catch (error) {
     console.error('Get All Products Error:', error);
@@ -63,7 +62,7 @@ exports.getAllProducts = async (req, res) => {
  */
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).populate('reviews.user', 'name');
     if (!product) {
       return res.status(404).json({ message: 'Product not found.' });
     }

@@ -23,38 +23,69 @@ const orderSchema = new mongoose.Schema({
       }
     }
   ],
-  totalPrice: { 
-    type: Number, 
+  totalPrice: { type: Number, required: true },
+  discount: { type: Number, default: 0 },
+  taxAmount: { type: Number, default: 0 },
+  shippingCharge: { type: Number, default: 5 },
+  shippingAddress: { 
+    type: String, 
     required: true 
-  },
-  discount: { 
-    type: Number, 
-    default: 0 
-  },
-  taxAmount: { 
-    type: Number, 
-    default: 0 
-  },
-  shippingCharge: { 
-    type: Number, 
-    default: 5 
-  },
-  shippingAddress: {
-    street: String,
-    city: String,
-    state: String,
-    postalCode: String,
-    country: String
   },
   status: { 
     type: String, 
-    enum: ['pending', 'shipped', 'delivered'], 
+    enum: ['pending', 'paid', 'failed', 'shipped', 'delivered'], 
     default: 'pending' 
   },
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-  }
+  paymentStatus: { 
+    type: String, 
+    enum: ['pending', 'successful', 'failed'], 
+    default: 'pending' 
+  },
+  paymentMethod: { 
+    type: String, 
+    enum: ['card', 'upi', 'paypal'], 
+    required: true 
+  },
+  transactionId: { 
+    type: String,
+    trim: true
+  },
+  paymentDetails: {
+    // Card payment fields
+    cardType: String,
+    last4: String,
+    cardHolderName: String,
+    
+    // PayPal payment fields
+    email: String,
+    
+    // UPI payment fields
+    upiId: String,
+    referenceNumber: String,
+    
+    // Generic payment fields
+    method: {
+      type: String,
+      enum: ['card', 'upi', 'paypal'],
+      required: true
+    }
+  },
+  paymentTimestamp: { 
+    type: Date
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now }
 });
+
+// Update the updatedAt field on save
+orderSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
+
+// Create indexes for faster queries
+orderSchema.index({ user: 1, createdAt: -1 });
+orderSchema.index({ status: 1 });
+orderSchema.index({ transactionId: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);
