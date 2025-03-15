@@ -12,7 +12,7 @@ interface Product {
   name: string;
   price: number;
   description: string;
-  rating: number;
+  averageRating: number;
   images: string[];
   createdAt: string;
   updatedAt: string;
@@ -118,7 +118,7 @@ export default function ProductDetailScreen() {
             <Text style={styles.productPrice}>$ {product?.price ? product.price.toFixed(2) : 'N/A'}</Text>
             <Text style={styles.productDescription}>{product.description}</Text>
             <View style={styles.ratingContainer}>
-              <Text style={styles.productRating}>⭐ {product?.rating ? product.rating.toFixed(1) : 'N/A'}</Text>
+              <Text style={styles.productRating}>⭐ {product?.averageRating ? product.averageRating.toFixed(1) : 'N/A'}</Text>
               <Text style={styles.ratingText}>Based on 45 reviews</Text>
             </View>
 

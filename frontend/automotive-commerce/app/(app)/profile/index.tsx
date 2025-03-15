@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, ReactNode } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // Import AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import { FontAwesome, MaterialIcons, Feather, AntDesign } from '@expo/vector-icons';
 
-// Reuse the colors from the ProductCard theme
 const colors = {
   primary: '#373D20',
   secondary: '#717744',
@@ -12,85 +13,110 @@ const colors = {
   error: '#FF0000',
 };
 
+interface StatusButtonProps {
+  title: string;
+  count: number;
+  icon: ReactNode;
+  onPress: () => void;
+}
+
+const StatusButton = ({ title, count, icon, onPress }: StatusButtonProps) => (
+  <TouchableOpacity style={styles.statusButton} onPress={onPress}>
+    <View style={styles.statusIconContainer}>
+      {icon}
+    </View>
+    <Text style={styles.statusCount}>{count}</Text>
+    <Text style={styles.statusTitle}>{title}</Text>
+  </TouchableOpacity>
+);
+
 export default function ProfileScreen() {
-  const [user, setUser] = useState({
-    name: '',
-    email: '',
-    profileImage: 'https://via.placeholder.com/150',
-    address: '',
-    orderHistory: [],
+  const router = useRouter();
+  const [profileData, setProfileData] = useState({
+    user: {
+      name: '',
+      email: '',
+      phone: '',
+      role: '',
+      verified: false,
+    },
+    orderStatusCounts: {
+      processing: 0,
+      shipped: 0,
+      delivered: 0,
+      cancelled: 0
+    }
   });
 
   useEffect(() => {
-    // Function to fetch user data
-    const fetchUserData = async () => {
+    const fetchProfileData = async () => {
       try {
-        // Retrieve the authToken from AsyncStorage
         const authToken = await AsyncStorage.getItem('authToken');
-        if (!authToken) {
-          console.error('No auth token found');
-          return;
-        }
-
-        // Make the API request with the authToken in the headers
-        const response = await fetch('https://your-api-url.com/api/users/me', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${authToken}`, // Include the authToken
-          },
+        const response = await fetch('http://localhost:5000/api/users/me', {
+          headers: { Authorization: `Bearer ${authToken}` },
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
         const data = await response.json();
-        console.log('User data:', data); // Log the response to the console
-
-        // Update the state with the fetched data
-        setUser({
-          name: data.name,
-          email: data.email,
-          profileImage: data.profileImage || 'https://via.placeholder.com/150',
-          address: data.address,
-          orderHistory: data.orderHistory || [],
-        });
+        setProfileData(data);
       } catch (error) {
-        console.error('Failed to fetch user data:', error);
+        console.error('Error fetching profile:', error);
       }
     };
-
-    fetchUserData();
+    fetchProfileData();
   }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.profileHeader}>
-        <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
-        <Text style={styles.userName}>{user.name}</Text>
-        <Text style={styles.userEmail}>{user.email}</Text>
+        <Image 
+          source={require('../../../assets/images/placeholder.jpg')} 
+          style={styles.profileImage} 
+        />
+        <Text style={styles.userName}>{profileData.user.name}</Text>
+        <Text style={styles.userEmail}>{profileData.user.email}</Text>
+        <Text style={styles.userPhone}>{profileData.user.phone}</Text>
+        {/* <View style={styles.verificationBadge}>
+          <Text style={styles.verificationText}>
+            {profileData.user.verified ? 'Verified' : 'Not Verified'}
+          </Text>
+        </View> */}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Shipping Address</Text>
-        <Text style={styles.sectionContent}>{user.address}</Text>
+      <View style={styles.statusContainer}>
+        <StatusButton
+          title="To Ship"
+          count={profileData.orderStatusCounts.processing}
+          icon={<FontAwesome name="truck" size={24} color={colors.primary} />}
+          onPress={() => router.push('/orders/processing')}
+        />
+        <StatusButton
+          title="To Receive"
+          count={profileData.orderStatusCounts.shipped}
+          icon={<MaterialIcons name="local-shipping" size={24} color={colors.primary} />}
+          onPress={() => router.push('/orders/shipped')}
+        />
+        <StatusButton
+          title="To Review"
+          count={profileData.orderStatusCounts.delivered}
+          icon={<Feather name="package" size={24} color={colors.primary} />}
+          onPress={() => router.push('/orders/delivered')}
+        />
+        <StatusButton
+          title="Returns & Cancellations"
+          count={profileData.orderStatusCounts.cancelled}
+          icon={<AntDesign name="closecircleo" size={24} color={colors.primary} />}
+          onPress={() => router.push('/orders/cancelled')}
+        />
       </View>
 
-      {/* <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Order History</Text>
-        {user.orderHistory.map((order) => (
-          <View key={order.id} style={styles.orderItem}>
-            <Text style={styles.orderText}>{order.item}</Text>
-            <Text style={styles.orderText}>{order.date}</Text>
-            <Text style={styles.orderText}>{order.amount}</Text>
-          </View>
-        ))}
-      </View> */}
+      
 
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Edit Profile</Text>
-      </TouchableOpacity>
+      {/* <TouchableOpacity 
+        style={styles.editButton}
+        onPress={() => router.push('/profile/edit')}
+      >
+        <Text style={styles.editButtonText}>Edit Profile</Text>
+        <Feather name="edit" size={20} color="white" />
+      </TouchableOpacity> */}
     </ScrollView>
   );
 }
@@ -108,59 +134,99 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginBottom: 10,
+    marginBottom: 15,
     borderWidth: 2,
     borderColor: colors.accent,
   },
   userName: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: colors.primary,
+    marginBottom: 5,
   },
   userEmail: {
     fontSize: 16,
     color: colors.text,
+    marginBottom: 3,
   },
-  section: {
+  userPhone: {
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 10,
+  },
+  verificationBadge: {
+    backgroundColor: colors.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 15,
+  },
+  verificationText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     marginBottom: 20,
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    borderWidth: 1,
-    borderColor: colors.secondary,
   },
-  sectionTitle: {
+  statusButton: {
+    width: '48%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+    alignItems: 'center',
+    elevation: 2,
+  },
+  statusIconContainer: {
+    backgroundColor: colors.background,
+    borderRadius: 20,
+    padding: 10,
+    marginBottom: 10,
+  },
+  statusTitle: {
+    color: colors.primary,
+    fontWeight: '600',
+    marginTop: 5,
+  },
+  statusCount: {
+    color: colors.secondary,
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  infoSection: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 10,
+  },
+  infoLabel: {
+    color: colors.text,
+    fontSize: 16,
+  },
+  infoValue: {
     color: colors.primary,
+    fontWeight: '500',
   },
-  sectionContent: {
-    fontSize: 16,
-    color: colors.text,
-  },
-  orderItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: colors.accent,
-    paddingVertical: 10,
-  },
-  orderText: {
-    fontSize: 16,
-    color: colors.text,
-  },
-  button: {
+  editButton: {
     backgroundColor: colors.primary,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 15,
     borderRadius: 10,
-    alignItems: 'center',
+    gap: 10,
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
+  editButtonText: {
+    color: 'white',
     fontWeight: 'bold',
+    fontSize: 16,
   },
 });

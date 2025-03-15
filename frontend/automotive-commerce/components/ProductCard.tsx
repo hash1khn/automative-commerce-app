@@ -15,7 +15,7 @@ interface Product {
   name: string;
   price: number;
   description: string;
-  rating: number;
+  averageRating: number;
   images: string[];
   createdAt: string;
   updatedAt: string;
@@ -30,7 +30,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
   if (!product) return null;
 
-  const rating = product.rating?.toFixed(1) || '0.0';
+  const rating = product.averageRating?.toFixed(1) || '0.0';
   const price = product.price?.toFixed(2) || '0.00';
   const stock = product.stock || 0;
 
