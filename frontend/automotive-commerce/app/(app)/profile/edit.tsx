@@ -1,6 +1,5 @@
-// app/(main)/profile/edit.tsx
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
@@ -20,6 +19,8 @@ export default function EditProfile() {
     name: '',
     email: '',
     phone: '',
+    password: '',
+    confirmPassword: '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -31,7 +32,12 @@ export default function EditProfile() {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         const data = await response.json();
-        setUser(data.user);
+        setUser((prev) => ({
+          ...prev,
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone,
+        }));
       } catch (error) {
         Toast.show({
           type: 'error',
@@ -44,20 +50,36 @@ export default function EditProfile() {
   }, []);
 
   const handleSave = async () => {
+    // Check if passwords match
+    if (user.password !== user.confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match');
+      return;
+    }
+
+    // Check if password is at least 8 characters
+    if (user.password && user.password.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters long');
+      return;
+    }
+
     try {
       setLoading(true);
       const authToken = await AsyncStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5000/api/users/me', {
+      const response = await fetch('http://localhost:5000/api/users/update-user', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${authToken}`,
         },
-        body: JSON.stringify(user),
+        body: JSON.stringify({
+          name: user.name,
+          phone: user.phone,
+          password: user.password, // Include password in the update request
+        }),
       });
 
       if (!response.ok) throw new Error('Update failed');
-      
+
       Toast.show({
         type: 'success',
         text1: 'Success',
@@ -78,33 +100,42 @@ export default function EditProfile() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Edit Profile</Text>
-      
+
       <TextInput
         style={styles.input}
         placeholder="Full Name"
         value={user.name}
-        onChangeText={(text) => setUser({...user, name: text})}
+        onChangeText={(text) => setUser({ ...user, name: text })}
       />
-      
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={user.email}
-        onChangeText={(text) => setUser({...user, email: text})}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      
+
       <TextInput
         style={styles.input}
         placeholder="Phone Number"
         value={user.phone}
-        onChangeText={(text) => setUser({...user, phone: text})}
+        onChangeText={(text) => setUser({ ...user, phone: text })}
         keyboardType="phone-pad"
       />
 
-      <TouchableOpacity 
-        style={styles.button} 
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        placeholderTextColor={colors.text}
+        secureTextEntry
+        value={user.password}
+        onChangeText={(text) => setUser({ ...user, password: text })}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Confirm Password"
+        placeholderTextColor={colors.text}
+        secureTextEntry
+        value={user.confirmPassword}
+        onChangeText={(text) => setUser({ ...user, confirmPassword: text })}
+      />
+
+      <TouchableOpacity
+        style={styles.button}
         onPress={handleSave}
         disabled={loading}
       >
