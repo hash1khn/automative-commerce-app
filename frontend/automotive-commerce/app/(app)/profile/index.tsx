@@ -92,7 +92,7 @@ export default function ProfileScreen() {
           title="To Receive"
           count={profileData.orderStatusCounts.shipped}
           icon={<MaterialIcons name="local-shipping" size={24} color={colors.primary} />}
-          onPress={() => router.push('/orders/shipped')}
+          onPress={() => router.push('/orders/index')}
         />
         <StatusButton
           title="To Review"

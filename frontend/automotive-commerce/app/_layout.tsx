@@ -4,11 +4,29 @@ import { AuthProvider } from '../context/AuthContext';
 
 const queryClient = new QueryClient();
 
+const colors = {
+  primary: '#373D20',
+  secondary: '#717744',
+  accent: '#BCBD8B',
+  background: '#F5F5F5',
+  text: '#766153',
+  error: '#FF0000',
+};
+
 export default function RootLayout() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
-        <Stack>
+        <Stack
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: colors.background,
+            },
+            headerTintColor: colors.primary,
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}>
           {/* Auth Group (Login, Register, etc.) */}
           <Stack.Screen
             name="(auth)"

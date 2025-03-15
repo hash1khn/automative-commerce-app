@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useAddToCart } from '../../../hooks/useCart';
 import { useAuth } from '../../../context/AuthContext';
-
+import Header from '../../../components/Header';
 
 interface Product {
   _id: string;
@@ -82,7 +82,7 @@ export default function ProductDetailScreen() {
 
 
   const renderStockMessage = (stock: number) => {
-    if (stock === 0) {
+    if (stock === 0 || !stock) {
       return (
         <Text style={styles.stockMessageOut}>
           Out of Stock
@@ -107,6 +107,7 @@ export default function ProductDetailScreen() {
     <View style={styles.container}>
       {product && (
         <>
+        {/* <Header></Header> */}
           <View style={styles.productHeader}>
             <Image
               style={styles.productImage}

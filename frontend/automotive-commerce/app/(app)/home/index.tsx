@@ -10,7 +10,7 @@ interface Product {
   name: string;
   price: number;
   description: string;
-  rating: number;
+  averageRating: number;
   images: string[];
   createdAt: string;
   updatedAt: string;
