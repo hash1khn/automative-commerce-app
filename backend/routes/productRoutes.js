@@ -7,6 +7,7 @@ const {
   updateProduct,
   deleteProduct,
   searchProducts,
+  addReview,
 } = require('../controllers/productController');
 
 const { authenticateJWT,adminCheck } = require('../middleware/authMiddleware');
@@ -21,5 +22,6 @@ router.post('/add-product', authenticateJWT, adminCheck,upload.array('images', 5
 router.put('/update-product/:id', authenticateJWT, adminCheck,upload.array('images', 5), updateProduct);
 router.delete('/delete-product/:id', authenticateJWT, adminCheck, deleteProduct);
 router.get('/search', searchProducts);
+router.post('/:id/review',authenticateJWT,addReview);
 
 module.exports = router;
