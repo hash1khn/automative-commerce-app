@@ -2,7 +2,7 @@ const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const { simulateCardPayment } = require('../utils/paymentSimulator');
-const sendEmail = require('../utils/emailHelper');
+const {sendEmail} = require('../utils/emailHelper');
 
 /**
  * @route   POST /api/orders/validate-promo
@@ -61,8 +61,9 @@ exports.processPayment = async (req, res) => {
       });
     }
 
-    // ✅ Prepare Payment Details
+    // ✅ Prepare Payment Details (with required method)
     const paymentInfo = {
+      method: 'card', // ✅ Required by schema
       cardType: paymentResult.cardType,
       last4: paymentResult.last4,
       cardHolderName: paymentDetails.cardHolderName
@@ -80,18 +81,19 @@ exports.processPayment = async (req, res) => {
       taxAmount: (totalAmount * 5) / 100,
       shippingCharge: 5,
       shippingAddress,
-      status: "paid",
+      status: "processing",
       paymentStatus: "successful",
       transactionId: paymentResult.transactionId,
+      paymentMethod: "card", // ✅ Required if in schema
       paymentDetails: paymentInfo,
       paymentTimestamp: paymentResult.timestamp || new Date().toISOString()
     });
 
     await order.save();
 
-    // ✅ Deduct stock after successful payment
+    // ✅ Deduct stock
     for (let item of cartItems) {
-      let product = await Product.findById(item.productId);
+      const product = await Product.findById(item.productId);
       if (product) {
         product.stock -= item.quantity;
         await product.save();
@@ -101,7 +103,7 @@ exports.processPayment = async (req, res) => {
     // ✅ Clear user's cart
     await Cart.findOneAndDelete({ user: req.user.id });
 
-    // ✅ Send Order Confirmation Email
+    // ✅ Send confirmation email
     await sendEmail({
       to: req.user.email,
       subject: 'Order Confirmation',
@@ -115,9 +117,9 @@ Payment Method: Credit Card (${paymentInfo.cardType} ending in ${paymentInfo.las
 Transaction ID: ${paymentResult.transactionId}
 
 Items:
-${order.items.map(item => `- ${item.product.name} (Qty: ${item.quantity}) - $${item.price}`).join('\n')}
+${order.items.map(item => `- ${item.product?.name || 'Product'} (Qty: ${item.quantity}) - $${item.price}`).join('\n')}
 
-Thank you for shopping with us!`,
+Thank you for shopping with us!`
     });
 
     return res.status(200).json({
@@ -131,6 +133,7 @@ Thank you for shopping with us!`,
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
 
 
 /**

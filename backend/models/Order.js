@@ -31,47 +31,37 @@ const orderSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-  status: { 
-    type: String, 
-    enum: ['pending', 'paid', 'failed', 'shipped', 'delivered'], 
-    default: 'pending' 
-  },
+  status: {
+    type: String,
+    enum: ['processing', 'shipped', 'delivered', 'cancelled'],
+    default: 'processing'
+  },  
   paymentStatus: { 
     type: String, 
     enum: ['pending', 'successful', 'failed'], 
     default: 'pending' 
   },
-  paymentMethod: { 
-    type: String, 
-    enum: ['card', 'upi', 'paypal'], 
-    required: true 
-  },
   transactionId: { 
     type: String,
     trim: true
   },
+  paymentMethod: {
+    type: String,
+    enum: ['card'],
+    default: 'card' // defaulting since only card is used
+  },
   paymentDetails: {
-    // Card payment fields
-    cardType: String,
-    last4: String,
-    cardHolderName: String,
-    
-    // PayPal payment fields
-    email: String,
-    
-    // UPI payment fields
-    upiId: String,
-    referenceNumber: String,
-    
-    // Generic payment fields
     method: {
       type: String,
-      enum: ['card', 'upi', 'paypal'],
-      required: true
-    }
+      enum: ['card'],
+      default: 'card' // defaulting as only card is supported
+    },
+    cardType: String,
+    last4: String,
+    cardHolderName: String
   },
   paymentTimestamp: { 
-    type: Date
+    type: Date 
   },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
@@ -83,7 +73,7 @@ orderSchema.pre('save', function(next) {
   next();
 });
 
-// Create indexes for faster queries
+// Indexes for performance
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ transactionId: 1 });
