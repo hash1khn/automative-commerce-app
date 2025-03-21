@@ -4,6 +4,15 @@ const Product = require('../models/Product');
 const { simulateCardPayment } = require('../utils/paymentSimulator');
 const sendEmail = require('../utils/emailHelper');
 
+const getDiscount = (promoCode) => {
+  const validPromoCodes = {
+    DISCOUNT10: 0.1, // 10% discount
+    SAVE20: 0.2,     // 20% discount
+    FREESHIP: 5,     // $5 flat discount
+  };
+  return validPromoCodes[promoCode.toUpperCase()] || 0;
+};
+
 /**
  * @route   POST /api/orders/validate-promo
  * @desc    Validate promo code and return discount amount
@@ -11,22 +20,32 @@ const sendEmail = require('../utils/emailHelper');
  */
 exports.validatePromoCode = async (req, res) => {
   try {
-    const { promoCode, subtotal } = req.body;
+    const { promoCode } = req.body;
 
-    if (!subtotal || subtotal <= 0) {
-      return res.status(400).json({ message: 'Invalid subtotal amount.' });
+    // Validate promo code input
+    if (!promoCode || typeof promoCode !== 'string') {
+      return res.status(400).json({ message: 'Promo code is required and must be a string.' });
     }
 
-    // ✅ Apply promo code (10% discount) if valid
-    let discount = 0;
-    const validPromoCode = "DISCOUNT10";
-    if (promoCode && promoCode.toUpperCase() === validPromoCode) {
-      discount = (subtotal * 10) / 100;
+    // Get discount value
+    const discount = getDiscount(promoCode);
+
+    // Check if the promo code is valid
+    if (discount === 0) {
+      return res.status(400).json({
+        message: 'Invalid promo code.',
+        discount: 0,
+      });
     }
 
+    // Determine discount type
+    const discountType = discount < 1 ? 'percentage' : 'flat';
+
+    // Return success response
     return res.status(200).json({
-      message: discount > 0 ? 'Promo code applied successfully!' : 'Invalid promo code.',
-      discount
+      message: 'Promo code applied successfully!',
+      discount,
+      discountType,
     });
   } catch (error) {
     console.error('Validate Promo Code Error:', error);
