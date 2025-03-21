@@ -8,7 +8,8 @@ const getDiscount = (promoCode) => {
   const validPromoCodes = {
     DISCOUNT10: 0.1, // 10% discount
     SAVE20: 0.2,     // 20% discount
-    FREESHIP: 5,     // $5 flat discount
+    FREESHIP: 5, 
+    HARAMKHOR90: 0.9,    // $5 flat discount
   };
   return validPromoCodes[promoCode.toUpperCase()] || 0;
 };

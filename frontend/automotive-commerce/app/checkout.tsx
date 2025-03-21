@@ -14,6 +14,7 @@ import { useCart } from '../hooks/useCart';
 import { useState } from 'react';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
+import { useRouter } from 'expo-router';
 
 // Define color constants
 const colors = {
@@ -52,6 +53,7 @@ type CheckoutSectionProps = {
 type PaymentSectionProps = {
   shippingAddress: string;
   total: number;
+  cartItems: CartItem[];
 };
 
 // Define type for card details
@@ -59,6 +61,7 @@ type CardDetails = {
   name: string;
   number: string;
   cvv: string;
+  expiryDate: string;
 };
 
 // CheckoutSection Component
@@ -68,11 +71,8 @@ const CheckoutSection = ({ onProceed, setDiscount, setTotal }: CheckoutSectionPr
   const [promoCode, setPromoCode] = useState<string>('');
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
   const [verifying, setVerifying] = useState(false);
-  const authToken = useAuth();
-  console.log('this is auth',authToken)
-  
+  const authToken = useAuth(); // Get the auth token
 
-  // Calculate total with discount
   const calculateTotal = (): number => {
     if (!cart?.items) return 0;
     const subtotal = cart.items.reduce(
@@ -99,9 +99,13 @@ const CheckoutSection = ({ onProceed, setDiscount, setTotal }: CheckoutSectionPr
       return;
     }
 
+    if (!authToken?.token) {
+      alert('You must be logged in to apply a promo code');
+      return;
+    }
+
     try {
       setVerifying(true);
-      // const authToken = await AsyncStorage.getItem('authToken');
       const response = await fetch('http://localhost:5000/api/orders/validate-promo', {
         method: 'POST',
         headers: {
@@ -216,20 +220,100 @@ const CheckoutSection = ({ onProceed, setDiscount, setTotal }: CheckoutSectionPr
   );
 };
 
+
 // PaymentSection Component
-const PaymentSection = ({ shippingAddress, total }: PaymentSectionProps) => {
+const PaymentSection = ({ shippingAddress, total, cartItems }: PaymentSectionProps) => {
   const [cardDetails, setCardDetails] = useState<CardDetails>({
     name: '',
     number: '',
-    cvv: ''
+    cvv: '',
+    expiryDate: '' // Initialize expiryDate
   });
+  const { data: cart } = useCart(); // Get cart items
+  const authToken = useAuth(); // Get the auth token
+  const router = useRouter(); // Use Expo Router's useRouter
 
-  const handlePayment = (): void => {
-    if (!cardDetails.name || !cardDetails.number || !cardDetails.cvv) {
+  const handlePayment = async () => {
+    // Validate card details
+    if (!cardDetails.name || !cardDetails.number || !cardDetails.cvv || !cardDetails.expiryDate) {
       alert('Please fill all card details');
       return;
     }
-    alert(`Payment of $${total} successful!`);
+
+    // Validate expiry date format (MM/YY)
+    const expiryDateRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
+    if (!expiryDateRegex.test(cardDetails.expiryDate)) {
+      alert('Please enter a valid expiry date in the format MM/YY');
+      return;
+    }
+
+    if (!authToken?.token) {
+      alert('You must be logged in to proceed with payment');
+      return;
+    }
+
+    try {
+      // Prepare order data
+      const orderData = {
+        cartItems: cartItems.map(item => ({
+          productId: item.product._id,
+          quantity: item.quantity,
+          price: item.product.price
+        })),
+        totalAmount: total,
+        shippingAddress,
+        paymentDetails: {
+          cardHolderName: cardDetails.name,
+          cardNumber: cardDetails.number,
+          cvv: cardDetails.cvv,
+          expiryDate: cardDetails.expiryDate // Include expiryDate in payment details
+        }
+      };
+
+      // Call the API to create the order
+      const response = await fetch('http://localhost:5000/api/orders/payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken.token}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Payment failed');
+      }
+
+      // Clear the cart by calling the DELETE endpoint
+      const clearCartResponse = await fetch('http://localhost:5000/api/cart/clear', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${authToken.token}`
+        }
+      });
+
+      if (!clearCartResponse.ok) {
+        throw new Error('Failed to clear the cart');
+      }
+
+      // Navigate to the order confirmation screen using Expo Router
+      router.push({
+        pathname: '/order-confirmation/[orderId]',
+        params: { orderId: data.order._id }
+      });
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+
+      // Type narrowing to handle the 'unknown' type
+      if (error instanceof Error) {
+        alert(error.message || 'Payment processing failed');
+      } else {
+        alert('Payment processing failed due to an unknown error');
+      }
+    }
   };
 
   return (
@@ -261,6 +345,12 @@ const PaymentSection = ({ shippingAddress, total }: PaymentSectionProps) => {
         />
         <TextInput
           style={styles.input}
+          placeholder="Expiry Date (MM/YY)"
+          value={cardDetails.expiryDate}
+          onChangeText={(text: string) => setCardDetails(prev => ({ ...prev, expiryDate: text }))}
+        />
+        <TextInput
+          style={styles.input}
           placeholder="CVV"
           keyboardType="number-pad"
           secureTextEntry
@@ -282,6 +372,7 @@ export default function CombinedCheckout() {
   const [shippingAddress, setShippingAddress] = useState<string>('');
   const [discount, setDiscount] = useState<number>(0);
   const [total, setTotal] = useState<number>(0);
+  const { data: cart } = useCart(); // Get cart data
 
   const handleProceed = (address: string): void => {
     setShippingAddress(address);
@@ -301,6 +392,7 @@ export default function CombinedCheckout() {
         <PaymentSection
           shippingAddress={shippingAddress}
           total={total}
+          cartItems={cart?.items || []} // Pass cart items to PaymentSection
         />
       )}
     </SafeAreaView>
