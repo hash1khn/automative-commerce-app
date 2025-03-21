@@ -69,6 +69,7 @@ const CheckoutSection = ({ onProceed, setDiscount, setTotal }: CheckoutSectionPr
   const [promoDiscount, setPromoDiscount] = useState<number>(0);
   const [verifying, setVerifying] = useState(false);
   const authToken = useAuth();
+  console.log('this is auth',authToken)
   
 
   // Calculate total with discount
@@ -105,7 +106,7 @@ const CheckoutSection = ({ onProceed, setDiscount, setTotal }: CheckoutSectionPr
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
+          'Authorization': `Bearer ${authToken.token}`
         },
         body: JSON.stringify({ promoCode }),
       });
