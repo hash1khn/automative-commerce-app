@@ -50,14 +50,16 @@ exports.getProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found.' });
     }
+    console.log(user)
 
     // ✅ Count the number of orders in each status category
+    // ✅ Aggregate order statuses
     const statusCounts = await Order.aggregate([
-      { $match: { user: req.user.id } }, // Filter orders by the logged-in user
-      { $group: { _id: "$status", count: { $sum: 1 } } } // Count each order status
+      { $match: { user: user._id } },
+      { $group: { _id: "$status", count: { $sum: 1 } } }
     ]);
 
-    // ✅ Convert the aggregation result to an object
+    // ✅ Prepare response object with all possible statuses
     const orderStatusCounts = {
       processing: 0,
       shipped: 0,

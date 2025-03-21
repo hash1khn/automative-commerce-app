@@ -1,8 +1,8 @@
 // app/product/[id].tsx
 import { useLocalSearchParams, router } from 'expo-router';
-import { View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, ActivityIndicator, TouchableOpacity, FlatList, Dimensions, Animated } from 'react-native';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useAddToCart } from '../../../hooks/useCart';
 import { useAuth } from '../../../context/AuthContext';
 import Header from '../../../components/Header';
@@ -16,20 +16,23 @@ interface Product {
   images: string[];
   createdAt: string;
   updatedAt: string;
-  stock: number; // Add this line
+  stock: number;
 }
 
 const API_URL = 'http://localhost:5000/api/products';
+const { width } = Dimensions.get('window');
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { user, logout } = useAuth(); // Get auth state
+  const { user, logout } = useAuth();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
 
-  const { mutate: addToCart, isPending } = useAddToCart(); // Use `isPending` instead of `isLoading`
+  const { mutate: addToCart, isPending } = useAddToCart();
 
   const handleAddToCart = () => {
     if (!user) {
@@ -56,6 +59,56 @@ export default function ProductDetailScreen() {
     fetchProduct();
   }, [id]);
 
+  // Handle scroll events to update active dot indicator
+  const handleScroll = (event: any) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const index = Math.round(scrollPosition / width);
+    setActiveIndex(index);
+  };
+
+  // Render each image in the carousel
+  const renderImageItem = ({ item, index }: { item: string; index: number }) => {
+    return (
+      <View style={styles.imageSlide}>
+        <Image
+          style={styles.productImage}
+          source={{ uri: item.replace(/"|<.*?>/g, '') }}
+          resizeMode="contain"
+        />
+      </View>
+    );
+  };
+
+  // Scroll to specific image index
+  const scrollToIndex = (index: number) => {
+    if (flatListRef.current && product?.images.length) {
+      flatListRef.current.scrollToIndex({
+        index,
+        animated: true,
+      });
+    }
+  };
+
+  // Render pagination dots
+  const renderPaginationDots = () => {
+    if (!product?.images || product.images.length <= 1) return null;
+    
+    return (
+      <View style={styles.paginationContainer}>
+        {product.images.map((_, index) => (
+          <TouchableOpacity 
+            key={index}
+            style={[
+              styles.paginationDot,
+              activeIndex === index ? styles.activeDot : styles.inactiveDot
+            ]}
+            onPress={() => scrollToIndex(index)}
+          />
+        ))}
+      </View>
+    );
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -79,7 +132,6 @@ export default function ProductDetailScreen() {
       </View>
     );
   }
-
 
   const renderStockMessage = (stock: number) => {
     if (stock === 0 || !stock) {
@@ -107,13 +159,21 @@ export default function ProductDetailScreen() {
     <View style={styles.container}>
       {product && (
         <>
-        {/* <Header></Header> */}
+          {/* Image Carousel */}
           <View style={styles.productHeader}>
-            <Image
-              style={styles.productImage}
-              source={{ uri: product.images[0]?.replace(/"|<.*?>/g, '') }}
+            <FlatList
+              ref={flatListRef}
+              data={product.images}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              renderItem={renderImageItem}
+              onScroll={handleScroll}
+              keyExtractor={(item, index) => `image-${index}`}
             />
+            {renderPaginationDots()}
           </View>
+          
           <View style={styles.productInfo}>
             <Text style={styles.productName}>{product.name}</Text>
             <Text style={styles.productPrice}>$ {product?.price ? product.price.toFixed(2) : 'N/A'}</Text>
@@ -165,6 +225,7 @@ export default function ProductDetailScreen() {
     </View>
   );
 }
+
 // Add these color constants at the top of your file
 const colors = {
   primary: '#373D20',
@@ -175,7 +236,7 @@ const colors = {
   error: '#FF0000',
 };
 
-// Update the styles with the new color palette
+// Updated styles with image slider additions
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -192,15 +253,43 @@ const styles = StyleSheet.create({
     height: 300,
     marginBottom: 16,
     backgroundColor: colors.accent,
+    borderRadius: 12,
+    position: 'relative',
+  },
+  imageSlide: {
+    width: width - 32, // Account for container padding
+    height: 300,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 12,
   },
   productImage: {
     width: '90%',
     height: '90%',
-    resizeMode: 'contain',
     borderRadius: 8,
+  },
+  paginationContainer: {
+    position: 'absolute',
+    bottom: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+  },
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginHorizontal: 4,
+  },
+  activeDot: {
+    backgroundColor: colors.primary,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  inactiveDot: {
+    backgroundColor: colors.secondary,
+    opacity: 0.5,
   },
   productInfo: {
     flex: 1,
@@ -320,5 +409,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-// Update the ActivityIndicator color
