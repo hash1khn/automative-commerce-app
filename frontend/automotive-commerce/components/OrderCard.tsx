@@ -1,4 +1,3 @@
-// components/OrderCard.tsx
 import { View, Text, StyleSheet } from 'react-native';
 
 const colors = {
@@ -10,7 +9,24 @@ const colors = {
   error: '#FF0000',
 };
 
-export default function OrderCard({ order }) {
+// Define the type for the order prop (if using TypeScript)
+type Order = {
+  _id: string; // Use _id instead of id if your API returns _id
+  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  createdAt: string; // Use createdAt instead of date if your API returns createdAt
+  items: Array<{
+    product: {
+      name: string;
+    };
+    quantity: number;
+  }>;
+};
+
+type OrderCardProps = {
+  order: Order;
+};
+
+export default function OrderCard({ order }: OrderCardProps) {
   const statusLabels = {
     processing: 'To Ship',
     shipped: 'To Receive',
@@ -18,16 +34,21 @@ export default function OrderCard({ order }) {
     cancelled: 'Cancelled',
   };
 
+  // Format the date (if needed)
+  const formattedDate = new Date(order.createdAt).toLocaleDateString();
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.orderId}>Order #{order.id}</Text>
+        <Text style={styles.orderId}>Order #{order._id.slice(-6)}</Text> {/* Use a short ID for display */}
         <Text style={styles.status}>{statusLabels[order.status]}</Text>
       </View>
-      <Text style={styles.date}>Order Date: {order.date}</Text>
+      <Text style={styles.date}>Order Date: {formattedDate}</Text>
       <View style={styles.itemsContainer}>
-        {order.items.map((item, index) => (
-          <Text key={index} style={styles.item}>• {item}</Text>
+        {order.items.map((item) => (
+          <Text key={item.product.name} style={styles.item}>
+            • {item.product.name} (x{item.quantity})
+          </Text>
         ))}
       </View>
     </View>

@@ -67,9 +67,9 @@ export default function ProfileScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.profileHeader}>
-        <Image 
-          source={require('../../../assets/images/placeholder.jpg')} 
-          style={styles.profileImage} 
+        <Image
+          source={require('../../../assets/images/placeholder.jpg')}
+          style={styles.profileImage}
         />
         <Text style={styles.userName}>{profileData.user.name}</Text>
         <Text style={styles.userEmail}>{profileData.user.email}</Text>
@@ -86,29 +86,29 @@ export default function ProfileScreen() {
           title="To Ship"
           count={profileData.orderStatusCounts.processing}
           icon={<FontAwesome name="truck" size={24} color={colors.primary} />}
-          onPress={() => router.push('/orders/processing')}
+          onPress={() => router.push(`/orders?status=processing`)}
         />
         <StatusButton
           title="To Receive"
           count={profileData.orderStatusCounts.shipped}
           icon={<MaterialIcons name="local-shipping" size={24} color={colors.primary} />}
-          onPress={() => router.push('/orders/index')}
+          onPress={() => router.push(`/orders?status=shipped`)}
         />
         <StatusButton
           title="To Review"
           count={profileData.orderStatusCounts.delivered}
           icon={<Feather name="package" size={24} color={colors.primary} />}
-          onPress={() => router.push('/orders/delivered')}
+          onPress={() => router.push(`/orders?status=delivered`)}
         />
         <StatusButton
           title="Returns & Cancellations"
           count={profileData.orderStatusCounts.cancelled}
           icon={<AntDesign name="closecircleo" size={24} color={colors.primary} />}
-          onPress={() => router.push('/orders/cancelled')}
+          onPress={() => router.push(`/orders?status=cancelled`)}
         />
       </View>
 
-      
+
 
       {/* <TouchableOpacity 
         style={styles.editButton}
