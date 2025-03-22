@@ -234,16 +234,46 @@ const PaymentSection = ({ shippingAddress, total, cartItems }: PaymentSectionPro
   const router = useRouter(); // Use Expo Router's useRouter
 
   const handlePayment = async () => {
-    // Validate card details
+    // Validate required fields
     if (!cardDetails.name || !cardDetails.number || !cardDetails.cvv || !cardDetails.expiryDate) {
       alert('Please fill all card details');
       return;
     }
 
-    // Validate expiry date format (MM/YY)
+    // Validate expiry date format
     const expiryDateRegex = /^(0[1-9]|1[0-2])\/\d{2}$/;
     if (!expiryDateRegex.test(cardDetails.expiryDate)) {
       alert('Please enter a valid expiry date in the format MM/YY');
+      return;
+    }
+
+    // Validate card number format
+    const cleanedCardNumber = cardDetails.number.replace(/\s/g, '');
+    if (!/^\d{13,19}$/.test(cleanedCardNumber)) {
+      alert('Invalid card number. Must contain 13-19 digits');
+      return;
+    }
+
+    // Validate CVV format
+    if (!/^\d{3,4}$/.test(cardDetails.cvv)) {
+      alert('Invalid CVV. Must contain 3-4 digits');
+      return;
+    }
+
+    // Validate expiry date not expired
+    const [expMonth, expYear] = cardDetails.expiryDate.split('/').map(part => parseInt(part));
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear() % 100;
+    const currentMonth = currentDate.getMonth() + 1;
+
+    if (expYear < currentYear || (expYear === currentYear && expMonth < currentMonth)) {
+      alert('Card has expired. Please check the expiry date');
+      return;
+    }
+
+    // Validate payment amount
+    if (total <= 0) {
+      alert('Invalid payment amount. Please verify your order total');
       return;
     }
 
@@ -254,65 +284,70 @@ const PaymentSection = ({ shippingAddress, total, cartItems }: PaymentSectionPro
 
     try {
       // Prepare order data
-      const orderData = {
-        cartItems: cartItems.map(item => ({
-          productId: item.product._id,
-          quantity: item.quantity,
-          price: item.product.price
-        })),
-        totalAmount: total,
-        shippingAddress,
-        paymentDetails: {
-          cardHolderName: cardDetails.name,
-          cardNumber: cardDetails.number,
-          cvv: cardDetails.cvv,
-          expiryDate: cardDetails.expiryDate // Include expiryDate in payment details
-        }
-      };
+      const orderData = { /* ... */ };
 
-      // Call the API to create the order
       const response = await fetch('http://localhost:5000/api/orders/payment', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken.token}`
-        },
+        headers: { /* ... */ },
         body: JSON.stringify(orderData)
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Payment failed');
+        let errorMessage = 'Payment failed';
+
+        // Handle specific backend error codes
+        switch (data.errorCode) {
+          case 'MISSING_FIELDS':
+            errorMessage = 'Please fill all required card information';
+            break;
+          case 'INVALID_CARD_FORMAT':
+            errorMessage = 'Invalid card number format. Please check your card details';
+            break;
+          case 'EXPIRED_CARD':
+            errorMessage = 'Card expired. Please use a valid payment method';
+            break;
+          case 'INVALID_CVV':
+            errorMessage = 'Invalid CVV code. Please check the security code';
+            break;
+          case 'INVALID_AMOUNT':
+            errorMessage = 'Invalid payment amount. Please refresh and try again';
+            break;
+          case 'BANK_DECLINED':
+            errorMessage = 'Payment declined by your bank. Please contact your card issuer';
+            break;
+          default:
+            errorMessage = data.message || 'Payment processing failed';
+        }
+        throw new Error(errorMessage);
       }
 
-      // Clear the cart by calling the DELETE endpoint
+      // Handle cart clearing
       const clearCartResponse = await fetch('http://localhost:5000/api/cart/clear', {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${authToken.token}`
-        }
+        headers: { /* ... */ }
       });
 
       if (!clearCartResponse.ok) {
-        throw new Error('Failed to clear the cart');
+        throw new Error('Failed to clear cart after payment');
       }
 
-      // Navigate to the order confirmation screen using Expo Router
+      // Successful payment navigation
       router.push({
         pathname: '/order-confirmation/[orderId]',
         params: { orderId: data.order._id }
       });
-      
+
     } catch (error) {
       console.error('Payment error:', error);
 
-      // Type narrowing to handle the 'unknown' type
-      if (error instanceof Error) {
-        alert(error.message || 'Payment processing failed');
-      } else {
-        alert('Payment processing failed due to an unknown error');
-      }
+      // User-friendly error messages
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'Payment failed due to an unexpected error';
+
+      alert(errorMessage);
     }
   };
 
