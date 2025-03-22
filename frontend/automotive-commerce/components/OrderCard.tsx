@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 
 const colors = {
   primary: '#373D20',
@@ -24,9 +24,10 @@ type Order = {
 
 type OrderCardProps = {
   order: Order;
+  onCancelOrder?: (orderId: string) => void; // Callback for cancel order
 };
 
-export default function OrderCard({ order }: OrderCardProps) {
+export default function OrderCard({ order, onCancelOrder }: OrderCardProps) {
   const statusLabels = {
     processing: 'To Ship',
     shipped: 'To Receive',
@@ -51,6 +52,16 @@ export default function OrderCard({ order }: OrderCardProps) {
           </Text>
         ))}
       </View>
+
+      {/* Conditionally render the "Cancel Order" button */}
+      {order.status === 'processing' && (
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => onCancelOrder?.(order._id)}
+        >
+          <Text style={styles.cancelButtonText}>Cancel Order</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -90,5 +101,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.text,
     marginBottom: 4,
+  },
+  cancelButton: {
+    backgroundColor: colors.error,
+    padding: 10,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontWeight: '500',
   },
 });

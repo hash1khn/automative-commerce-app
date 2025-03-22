@@ -85,6 +85,10 @@ export const OrderTabs = () => {
   console.log('OrderTabs rendered. Active tab:', activeTab);
   console.log('Auth token:', authToken?.token ? 'Exists' : 'Missing');
 
+  const handleOrderCancelled = (orderId: string) => {
+    setOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderId));
+  };
+
   // Fetch user orders with fetch API
   const fetchUserOrders = async () => {
     console.log('Fetching user orders...');
@@ -202,7 +206,12 @@ export const OrderTabs = () => {
 
       {/* Content Area */}
       <ScrollView style={styles.content}>
-        {activeTab === 'processing' && <ProcessingOrders orders={filteredOrders} />}
+      {activeTab === 'processing' && (
+          <ProcessingOrders
+            orders={orders.filter((order) => order.status === 'processing')}
+            onOrderCancelled={handleOrderCancelled}
+          />
+        )}
         {activeTab === 'shipped' && <ShippedOrders orders={filteredOrders} />}
         {activeTab === 'delivered' && <DeliveredOrders orders={filteredOrders} />}
         {activeTab === 'cancelled' && <CancelledOrders orders={filteredOrders} />}

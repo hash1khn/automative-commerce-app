@@ -107,16 +107,6 @@ export default function ProfileScreen() {
           onPress={() => router.push(`/orders?status=cancelled`)}
         />
       </View>
-
-
-
-      {/* <TouchableOpacity 
-        style={styles.editButton}
-        onPress={() => router.push('/profile/edit')}
-      >
-        <Text style={styles.editButtonText}>Edit Profile</Text>
-        <Feather name="edit" size={20} color="white" />
-      </TouchableOpacity> */}
     </ScrollView>
   );
 }
