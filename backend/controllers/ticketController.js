@@ -121,7 +121,8 @@ exports.closeTicket = async (req, res) => {
  */
 exports.resolveTicket = async (req, res) => {
     try {
-      const ticket = await Ticket.findById(req.params.id);
+      const ticket = await Ticket.findById(req.params.id).populate('user');
+      console.log(ticket)
   
       if (!ticket) {
         return res.status(404).json({ message: 'Ticket not found.' });
