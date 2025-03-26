@@ -28,7 +28,7 @@ export default function EditProfile() {
     const fetchUserData = async () => {
       try {
         const authToken = await AsyncStorage.getItem('authToken');
-        const response = await fetch('http://localhost:5000/api/users/me', {
+        const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/users/me', {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         const data = await response.json();
@@ -65,7 +65,7 @@ export default function EditProfile() {
     try {
       setLoading(true);
       const authToken = await AsyncStorage.getItem('authToken');
-      const response = await fetch('http://localhost:5000/api/users/update-user', {
+      const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/users/update-user', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

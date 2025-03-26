@@ -111,7 +111,7 @@ export default function RegisterScreen() {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/auth/signup', userData);
+      const response = await axios.post('https://automative-commerce-app-production.up.railway.app/api/auth/signup', userData);
 
       if (response.status === 201) {
         Alert.alert('Success', 'Account created successfully! Please login.');

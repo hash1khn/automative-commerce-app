@@ -79,7 +79,7 @@ export default function ProcessingOrders({ orders = [], onOrderCancelled }: Proc
           text: 'Yes',
           onPress: async () => {
             try {
-              const response = await fetch(`http://localhost:5000/api/orders/${orderId}/update-order-status`, {
+              const response = await fetch(`https://automative-commerce-app-production.up.railway.app/api/orders/${orderId}/update-order-status`, {
                 method: 'PUT',
                 headers: {
                   'Content-Type': 'application/json',

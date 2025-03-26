@@ -43,7 +43,7 @@ const AdminTicketsPage = () => {
       setLoading(true);
       const authToken = await AsyncStorage.getItem('authToken');
       
-      const response = await fetch('http://localhost:5000/api/tickets/all', {
+      const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/tickets/all', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${authToken}`
@@ -85,7 +85,7 @@ const AdminTicketsPage = () => {
     try {
       const authToken = await AsyncStorage.getItem('authToken');
       
-      const response = await fetch(`http://localhost:5000/api/tickets/${ticketId}/resolve`, {
+      const response = await fetch(`https://automative-commerce-app-production.up.railway.app/api/tickets/${ticketId}/resolve`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${authToken}`
@@ -105,7 +105,7 @@ const AdminTicketsPage = () => {
     try {
       const authToken = await AsyncStorage.getItem('authToken');
       
-      const response = await fetch(`http://localhost:5000/api/tickets/${ticketId}/close`, {
+      const response = await fetch(`https://automative-commerce-app-production.up.railway.app/api/tickets/${ticketId}/close`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${authToken}`

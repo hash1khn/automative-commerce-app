@@ -62,7 +62,7 @@ const AllOrdersPage = () => {
             setLoading(true);
             const authToken = await AsyncStorage.getItem('authToken');
 
-            const response = await fetch('http://localhost:5000/api/orders/all-orders', {
+            const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/orders/all-orders', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${authToken}`
@@ -104,7 +104,7 @@ const AllOrdersPage = () => {
         try {
             const authToken = await AsyncStorage.getItem('authToken');
 
-            const response = await fetch(`http://localhost:5000/api/orders/${orderId}/update-order-status`, {
+            const response = await fetch(`https://automative-commerce-app-production.up.railway.app/api/orders/${orderId}/update-order-status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
