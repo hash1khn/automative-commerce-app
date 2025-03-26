@@ -32,7 +32,7 @@ export default function AdminDashboard() {
       title: 'Support Tickets',
       description: 'View and respond to customer issues',
       icon: <Feather name="help-circle" size={30} color={colors.primary} />,
-      onPress: () => router.push('/(app)/admin/tickets'),
+      onPress: () => router.push('/admin/tickets'),
     },
   ];
 
