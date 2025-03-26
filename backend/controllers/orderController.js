@@ -183,14 +183,31 @@ exports.getUserOrders = async (req, res) => {
       cancelled: 0
     };
 
-    orders.forEach(order => {
+    // ✅ Attach `to_review` flag to each item
+    const updatedOrders = orders.map(order => {
       if (statusCounts[order.status] !== undefined) {
         statusCounts[order.status]++;
       }
+
+      const updatedItems = order.items.map(item => {
+        const alreadyReviewed = item.product.reviews.some(
+          r => r.user.toString() === req.user.id
+        );
+
+        return {
+          ...item.toObject(),
+          to_review: order.status === 'delivered' && !alreadyReviewed
+        };
+      });
+
+      return {
+        ...order.toObject(),
+        items: updatedItems
+      };
     });
 
     return res.status(200).json({ 
-      orders, 
+      orders: updatedOrders,
       statusCounts 
     });
 
@@ -199,6 +216,7 @@ exports.getUserOrders = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
+
 
 
 /**
