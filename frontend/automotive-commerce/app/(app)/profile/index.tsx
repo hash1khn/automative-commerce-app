@@ -107,6 +107,15 @@ export default function ProfileScreen() {
           onPress={() => router.push(`/orders?status=cancelled`)}
         />
       </View>
+      <View style={styles.supportSection}>
+        <TouchableOpacity
+          style={styles.supportButton}
+          onPress={() => router.push('/support/new-ticket')}
+        >
+          <MaterialIcons name="support-agent" size={24} color="white" />
+          <Text style={styles.supportButtonText}>Create Support Ticket</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -215,6 +224,24 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   editButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  supportSection: {
+    marginTop: 20,
+    paddingHorizontal: 10,
+  },
+  supportButton: {
+    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    borderRadius: 10,
+    gap: 10,
+  },
+  supportButtonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,

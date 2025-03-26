@@ -2,10 +2,12 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Link, router } from 'expo-router';
 import CartIcon from './CartIcon';
 import { useAuth } from '../context/AuthContext';
+import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Define the color palette
 const colors = {
   primary: '#373D20',
+  adminPrimary: '#2A1E5C', // New admin color
   secondary: '#717744',
   accent: '#BCBD8B',
   background: '#F5F5F5',
@@ -15,6 +17,11 @@ const colors = {
 
 export default function Header() {
   const { user, logout } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [headerStyles, setHeaderStyles] = useState({
+    backgroundColor: colors.primary,
+    titleColor: colors.background,
+  });
 
   console.log('User state:', user); // Debugging
 
@@ -29,22 +36,60 @@ export default function Header() {
     router.push('/cart');
   };
 
-  return (
-    <View style={styles.headerContainer}>
-      <Text style={styles.title}>Automotive Commerce</Text>
-      
-      <View style={styles.iconsContainer}>
-        {/* Cart Icon */}
-        <TouchableOpacity onPress={handleCartPress}>
-          <CartIcon />
-        </TouchableOpacity>
+  const handleAdminPanelPress = () => {
+    router.push({ pathname: '/admin/dashboard/index' });
+  };
 
-        {/* Show Login or Logout based on auth state */}
-        {user ? (
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const authToken = await AsyncStorage.getItem('authToken');
+        const response = await fetch('http://localhost:5000/api/users/me', {
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        const data = await response.json();
+        
+        if (data.user?.role === 'admin') {
+          setIsAdmin(true);
+          setHeaderStyles({
+            backgroundColor: colors.adminPrimary,
+            titleColor: colors.background
+          });
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    };
+
+    if (user) checkAdminStatus();
+  }, [user]);
+
+  return (
+    <View style={[styles.headerContainer, { backgroundColor: headerStyles.backgroundColor }]}>
+      <View style={styles.titleContainer}>
+        <Text style={[styles.title, { color: headerStyles.titleColor }]}>
+          Automotive Commerce
+          {isAdmin && ' (Admin Mode)'}
+        </Text>
+      </View>
+
+      <View style={styles.iconsContainer}>
+        {isAdmin ? (
           <TouchableOpacity 
-            style={styles.button} 
-            onPress={logout}
+            style={styles.adminButton}
+            onPress={handleAdminPanelPress}
           >
+            <Text style={styles.adminButtonText}>Admin Panel</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={handleCartPress}>
+            <CartIcon />
+          </TouchableOpacity>
+        )}
+
+        {/* Authentication buttons */}
+        {user ? (
+          <TouchableOpacity style={styles.button} onPress={logout}>
             <Text style={styles.buttonText}>Logout</Text>
           </TouchableOpacity>
         ) : (
@@ -66,17 +111,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     paddingHorizontal: 20,
-    backgroundColor: colors.primary,
     borderBottomWidth: 1,
     borderBottomColor: colors.accent,
-    shadowColor: colors.primary,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
+  titleContainer: {
+    flex: 1,
+  },
   title: {
-    color: colors.background,
     fontWeight: 'bold',
     fontSize: 20,
     letterSpacing: 0.5,
@@ -88,10 +134,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderWidth: 1,
     borderColor: colors.primary,
+    marginLeft: 10,
   },
   buttonText: {
     color: colors.primary,
     fontWeight: '600',
+    fontSize: 14,
+  },
+  adminButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    backgroundColor: colors.accent,
+    borderWidth: 1,
+    borderColor: colors.adminPrimary,
+    marginRight: 10,
+  },
+  adminButtonText: {
+    color: colors.adminPrimary,
+    fontWeight: '700',
     fontSize: 14,
   },
   iconsContainer: {

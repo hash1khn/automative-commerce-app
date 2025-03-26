@@ -1,4 +1,5 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
 
 const colors = {
   primary: '#373D20',
@@ -24,10 +25,11 @@ type Order = {
 
 type OrderCardProps = {
   order: Order;
-  onCancelOrder?: (orderId: string) => void; // Callback for cancel order
+  onCancelOrder?: (orderId: string) => void;
 };
 
 export default function OrderCard({ order, onCancelOrder }: OrderCardProps) {
+  const router = useRouter();
   const statusLabels = {
     processing: 'To Ship',
     shipped: 'To Receive',
@@ -35,10 +37,28 @@ export default function OrderCard({ order, onCancelOrder }: OrderCardProps) {
     cancelled: 'Cancelled',
   };
 
+  // Add click handler for delivered orders
+  const handlePress = () => {
+    if (order.status === 'delivered') {
+      router.push({
+        pathname: '/add_review/[id]',
+        params: { id: order._id },
+      });
+    }
+  };
+
   // Format the date (if needed)
   const formattedDate = new Date(order.createdAt).toLocaleDateString();
 
   return (
+    <TouchableOpacity 
+      onPress={handlePress}
+      disabled={order.status !== 'delivered'}
+      style={[
+        styles.card,
+        order.status === 'delivered' && styles.clickableCard
+      ]}
+    >
     <View style={styles.card}>
       <View style={styles.header}>
         <Text style={styles.orderId}>Order #{order._id.slice(-6)}</Text> {/* Use a short ID for display */}
@@ -63,6 +83,7 @@ export default function OrderCard({ order, onCancelOrder }: OrderCardProps) {
         </TouchableOpacity>
       )}
     </View>
+    </TouchableOpacity>
   );
 }
 
@@ -112,5 +133,8 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#fff',
     fontWeight: '500',
+  },
+  clickableCard: {
+    backgroundColor: '#F8F8F8',
   },
 });
