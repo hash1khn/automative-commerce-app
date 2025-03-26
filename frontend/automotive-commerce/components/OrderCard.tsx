@@ -41,8 +41,7 @@ export default function OrderCard({ order, onCancelOrder }: OrderCardProps) {
   const handlePress = () => {
     if (order.status === 'delivered') {
       router.push({
-        pathname: '/add_review/[id]',
-        params: { id: order._id },
+        pathname: '/user-orders'
       });
     }
   };

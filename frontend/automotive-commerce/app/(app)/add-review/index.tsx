@@ -2,11 +2,11 @@
 import { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAuth } from '../../../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import { Rating } from 'react-native-ratings';
 
 const AddReviewScreen = () => {
-  const { id: orderId } = useLocalSearchParams();
+  const { id: orderId, productId, productName } = useLocalSearchParams();
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,7 +16,12 @@ const AddReviewScreen = () => {
   const handleSubmitReview = async () => {
     try {
       setIsSubmitting(true);
-      const response = await fetch(`http://localhost:5000/api/reviews/${orderId}`, {
+      
+      // Ensure productId is always a string (handle array case from useLocalSearchParams)
+      const productIdString = Array.isArray(productId) ? productId[0] : productId;
+      const orderIdString = Array.isArray(orderId) ? orderId[0] : orderId;
+      
+      const response = await fetch(`http://localhost:5000/api/products/${productIdString}/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -24,16 +29,22 @@ const AddReviewScreen = () => {
         },
         body: JSON.stringify({
           rating,
-          comment: reviewText
+          comment: reviewText,
         })
       });
 
-      if (!response.ok) throw new Error('Failed to submit review');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to submit review');
+      }
       
       Alert.alert('Success', 'Thank you for your review!');
       router.back();
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : String(error));
+      Alert.alert(
+        'Error', 
+        error instanceof Error ? error.message : 'An unknown error occurred'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -41,7 +52,12 @@ const AddReviewScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Rate Your Order</Text>
+      <Text style={styles.title}>Rate Your Product</Text>
+      {productName && (
+        <Text style={styles.productName}>
+          {Array.isArray(productName) ? productName[0] : productName}
+        </Text>
+      )}
       
       <Rating
         type='star'
@@ -50,7 +66,6 @@ const AddReviewScreen = () => {
         startingValue={rating}
         onFinishRating={setRating}
         style={styles.ratingContainer}
-        tintColor="#fff" // Background color for the rating component
       />
 
       <TextInput
@@ -84,8 +99,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#373D20',
+  },
+  productName: {
+    fontSize: 18,
+    fontWeight: '600',
     marginBottom: 20,
     textAlign: 'center',
+    color: '#717744',
   },
   ratingContainer: {
     marginVertical: 20,

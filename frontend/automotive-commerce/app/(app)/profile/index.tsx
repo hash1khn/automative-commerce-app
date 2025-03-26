@@ -110,7 +110,7 @@ export default function ProfileScreen() {
       <View style={styles.supportSection}>
         <TouchableOpacity
           style={styles.supportButton}
-          onPress={() => router.push('/support/new-ticket')}
+          onPress={() => router.push('/tickets/new-ticket')}
         >
           <MaterialIcons name="support-agent" size={24} color="white" />
           <Text style={styles.supportButtonText}>Create Support Ticket</Text>

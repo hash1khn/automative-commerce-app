@@ -37,7 +37,7 @@ export default function Header() {
   };
 
   const handleAdminPanelPress = () => {
-    router.push({ pathname: '/admin/dashboard/index' });
+    router.push({ pathname: '/admin/dashboard' });
   };
 
   useEffect(() => {
@@ -68,8 +68,9 @@ export default function Header() {
     <View style={[styles.headerContainer, { backgroundColor: headerStyles.backgroundColor }]}>
       <View style={styles.titleContainer}>
         <Text style={[styles.title, { color: headerStyles.titleColor }]}>
-          Automotive Commerce
-          {isAdmin && ' (Admin Mode)'}
+          
+          {!isAdmin && 'Automotive Commerce'}
+          {isAdmin && 'Admin Mode'}
         </Text>
       </View>
 
