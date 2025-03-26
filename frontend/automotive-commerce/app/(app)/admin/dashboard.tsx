@@ -20,19 +20,19 @@ export default function AdminDashboard() {
       title: 'Manage Orders',
       description: 'View and update customer orders',
       icon: <FontAwesome name="shopping-bag" size={30} color={colors.primary} />,
-      onPress: () => router.push({ pathname: '/(app)/admin/orders/index' }),
+      onPress: () => router.push({ pathname: '/(app)/admin/orders' }),
     },
     {
       title: 'Manage Products',
       description: 'Add, edit or remove products',
       icon: <MaterialIcons name="inventory" size={30} color={colors.primary} />,
-      onPress: () => router.push({ pathname: '/(app)/admin/products/index' }),
+      onPress: () => router.push({ pathname: '/(app)/admin/products' }),
     },
     {
       title: 'Support Tickets',
       description: 'View and respond to customer issues',
       icon: <Feather name="help-circle" size={30} color={colors.primary} />,
-      onPress: () => router.push({ pathname: '/(app)/admin/tickets/index' }),
+      onPress: () => router.push({ pathname: '/(app)/admin/tickets' }),
     },
   ];
 

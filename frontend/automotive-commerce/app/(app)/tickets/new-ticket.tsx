@@ -17,23 +17,23 @@ const NewTicketScreen = () => {
       setIsSubmitting(true);
       const authToken = await AsyncStorage.getItem('authToken');
       
-      const response = await fetch('http://localhost:5000/api/support/tickets', {
+      const response = await fetch('http://localhost:5000/api/tickets/create-ticket', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${authToken}`
         },
         body: JSON.stringify({
+          user: user?._id,
           subject,
-          description,
-          userId: user?._id
+          message: description,
         })
       });
 
       if (!response.ok) throw new Error('Failed to submit ticket');
       
-      Alert.alert('Success', 'Your support ticket has been submitted');
-      router.back();
+      // Navigate to success page instead of showing alert and going back
+      router.push('/(app)/tickets/success-page');
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'An unexpected error occurred');
     } finally {
