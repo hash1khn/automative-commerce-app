@@ -1,7 +1,9 @@
 import React, { useEffect, useState, ReactNode } from 'react';
-import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import Header from '../../../components/Header';
+import Footer from '../../../components/Footer';
 import { FontAwesome, MaterialIcons, Feather, AntDesign } from '@expo/vector-icons';
 
 const colors = {
@@ -32,6 +34,7 @@ const StatusButton = ({ title, count, icon, onPress }: StatusButtonProps) => (
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     user: {
       name: '',
@@ -50,19 +53,44 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     const fetchProfileData = async () => {
+      setLoading(true);
       try {
         const authToken = await AsyncStorage.getItem('authToken');
         const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/users/me', {
           headers: { Authorization: `Bearer ${authToken}` },
         });
+        
+        if (!response.ok) throw new Error('Failed to fetch profile');
+        
         const data = await response.json();
-        setProfileData(data);
+        
+        setProfileData({
+          user: {
+            name: data.name || data.user?.name || '',
+            email: data.email || data.user?.email || '',
+            phone: data.phone || data.user?.phone || '',
+            role: data.role || data.user?.role || '',
+            verified: data.verified || data.user?.verified || false
+          },
+          orderStatusCounts: {
+            processing: data.processing || data.orderStatusCounts?.processing || 0,
+            shipped: data.shipped || data.orderStatusCounts?.shipped || 0,
+            delivered: data.delivered || data.orderStatusCounts?.delivered || 0,
+            cancelled: data.cancelled || data.orderStatusCounts?.cancelled || 0
+          }
+        });
       } catch (error) {
         console.error('Error fetching profile:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchProfileData();
   }, []);
+
+  if (loading) {
+    return <ActivityIndicator size="large" color={colors.primary} />;
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -71,16 +99,10 @@ export default function ProfileScreen() {
           source={require('../../../assets/images/placeholder.jpg')}
           style={styles.profileImage}
         />
-        <Text style={styles.userName}>{profileData.user.name}</Text>
-        <Text style={styles.userEmail}>{profileData.user.email}</Text>
-        <Text style={styles.userPhone}>{profileData.user.phone}</Text>
-        {/* <View style={styles.verificationBadge}>
-          <Text style={styles.verificationText}>
-            {profileData.user.verified ? 'Verified' : 'Not Verified'}
-          </Text>
-        </View> */}
+        <Text style={styles.userName}>{profileData?.user?.name || 'Guest'}</Text>
+        <Text style={styles.userEmail}>{profileData?.user?.email || 'No email'}</Text>
+        <Text style={styles.userPhone}>{profileData?.user?.phone || 'No phone'}</Text>
       </View>
-
       <View style={styles.statusContainer}>
         <StatusButton
           title="To Ship"
@@ -116,6 +138,7 @@ export default function ProfileScreen() {
           <Text style={styles.supportButtonText}>Create Support Ticket</Text>
         </TouchableOpacity>
       </View>
+      <Footer></Footer>
     </ScrollView>
   );
 }

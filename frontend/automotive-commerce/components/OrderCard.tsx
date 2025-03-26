@@ -32,8 +32,8 @@ export default function OrderCard({ order, onCancelOrder }: OrderCardProps) {
   const router = useRouter();
   const statusLabels = {
     processing: 'To Ship',
-    shipped: 'To Receive',
-    delivered: 'To Review',
+    shipped: 'Receive',
+    delivered: 'Click To Review >',
     cancelled: 'Cancelled',
   };
 

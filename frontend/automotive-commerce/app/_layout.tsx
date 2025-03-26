@@ -55,7 +55,7 @@ export default function RootLayout() {
             name="cart"
             options={{
               title: 'Shopping Cart',
-              headerShown: false, // If you want a custom header
+              headerShown: true, // If you want a custom header
             }}
           />
 
@@ -63,7 +63,7 @@ export default function RootLayout() {
             name="checkout"
             options={{
               title: 'Checkout',
-              headerShown: false, // If you want a custom header
+              headerShown: true, // If you want a custom header
             }}
           />
 
@@ -71,7 +71,7 @@ export default function RootLayout() {
             name="payment"
             options={{
               title: 'Payment',
-              headerShown: false, // If you want a custom header
+              headerShown: true, // If you want a custom header
             }}
           />
         </Stack>

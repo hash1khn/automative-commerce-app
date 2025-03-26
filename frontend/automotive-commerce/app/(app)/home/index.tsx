@@ -2,6 +2,7 @@ import { View, FlatList, StyleSheet, SafeAreaView, ActivityIndicator, Text } fro
 import { Link } from 'expo-router';
 import ProductCard from '../../../components/ProductCard';
 import Header from '../../../components/Header';
+import Footer from '../../../components/Footer';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
@@ -92,6 +93,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         numColumns={1}
       />
+      <Footer />
     </SafeAreaView>
   );
 }
