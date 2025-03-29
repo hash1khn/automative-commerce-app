@@ -16,11 +16,10 @@ app.use(morgan('dev'));
 
 // ✅ Enable CORS
 app.use(cors({
-  origin: 'http://localhost:8081', // allow frontend origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE']
 }));
+
 
 // Middleware
 app.use(express.json());
