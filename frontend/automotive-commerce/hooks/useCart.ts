@@ -17,7 +17,7 @@ interface Cart {
 }
 
 // Fetch cart
-export const useCart = () => {
+export const useCart = () => { 
   return useQuery<Cart>({
     queryKey: ['cart'],
     queryFn: async () => {

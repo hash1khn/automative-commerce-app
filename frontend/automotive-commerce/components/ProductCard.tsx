@@ -1,5 +1,5 @@
 import { StyleSheet, View, Text, TouchableOpacity, Image } from 'react-native';
-import PropTypes from 'prop-types';
+import { Link } from 'expo-router';
 
 const colors = {
   primary: '#373D20',
@@ -14,24 +14,22 @@ interface Product {
   _id: string;
   name: string;
   price: number;
-  description: string;
+  description?: string;  // Made optional since not in your sample
   averageRating: number;
   images: string[];
-  createdAt: string;
-  updatedAt: string;
   stock: number;
+  createdAt?: string;    // Made optional
+  updatedAt?: string;    // Made optional
 }
 
 interface ProductCardProps {
-  product?: Product;
+  product: Product;      // Made required since you always pass it
   onPress?: () => void;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
-  if (!product) return null;
-
   const rating = product.averageRating?.toFixed(1) || '0.0';
-  const price = product.price?.toFixed(2) || '0.00';
+  const price = product.price?.toFixed(2);
   const stock = product.stock || 0;
 
   const renderStockMessage = (stock: number) => {
@@ -44,23 +42,27 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onPress }) => {
   };
 
   return (
-    <TouchableOpacity style={styles.cardContainer} onPress={onPress}>
-      <Image
-        source={{
-          uri: product.images?.[0] || 'https://via.placeholder.com/150',
-        }}
-        style={styles.productImage}
-        onError={(e) => console.log('Image error:', e.nativeEvent.error)}
-      />
-      <View style={styles.cardContent}>
-        <Text style={styles.productName}>{product.name}</Text>
-        <Text style={styles.productPrice}>${price}</Text>
-        <View style={styles.ratingContainer}>
-          <Text style={styles.productRating}>⭐ {rating}</Text>
-          {renderStockMessage(stock)}
-        </View>
-      </View>
-    </TouchableOpacity>
+    <View style={styles.cardContainer}>
+      <Link href={`/product/${product._id}`} asChild>
+        <TouchableOpacity onPress={onPress}>
+          <Image
+            source={{
+              uri: product.images?.[0] || 'https://via.placeholder.com/150',
+            }}
+            style={styles.productImage}
+            onError={(e) => console.log('Image error:', e.nativeEvent.error)}
+          />
+          <View style={styles.cardContent}>
+            <Text style={styles.productName}>{product.name}</Text>
+            <Text style={styles.productPrice}>${price}</Text>
+            <View style={styles.ratingContainer}>
+              <Text style={styles.productRating}>⭐ {rating}</Text>
+              {renderStockMessage(stock)}
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Link>
+    </View>
   );
 };
 
@@ -76,18 +78,16 @@ const styles = StyleSheet.create({
     elevation: 3,
     marginVertical: 8,
     marginHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   productImage: {
-    width: 80,
-    height: 80,
+    width: '100%',
+    height: 150,
     borderRadius: 8,
-    marginRight: 16,
+    marginBottom: 12,
     backgroundColor: colors.accent,
   },
   cardContent: {
-    flex: 1,
+    paddingHorizontal: 4,
   },
   productName: {
     fontSize: 16,

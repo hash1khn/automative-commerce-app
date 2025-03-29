@@ -27,6 +27,8 @@ const AdminTicketsPage = () => {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [responseTexts, setResponseTexts] = useState<Record<string, string>>({});
+  const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
   const router = useRouter();
   const { user } = useAuth();
 
@@ -42,7 +44,7 @@ const AdminTicketsPage = () => {
     try {
       setLoading(true);
       const authToken = await AsyncStorage.getItem('authToken');
-      
+
       const response = await fetch('http://localhost:5000/api/tickets/all', {
         method: 'GET',
         headers: {
@@ -51,7 +53,7 @@ const AdminTicketsPage = () => {
       });
 
       if (!response.ok) throw new Error('Failed to fetch tickets');
-      
+
       const data = await response.json();
       setTickets(data);
     } catch (error) {
@@ -61,30 +63,76 @@ const AdminTicketsPage = () => {
     }
   };
 
+  const handleResponseChange = (ticketId: string, text: string) => {
+    setResponseTexts(prev => ({ ...prev, [ticketId]: text }));
+  };
+
+  const submitResponse = async (ticketId: string) => {
+    const responseText = responseTexts[ticketId];
+    if (!responseText?.trim()) {
+      Alert.alert('Error', 'Please enter a response');
+      return;
+    }
+
+    try {
+      const authToken = await AsyncStorage.getItem('authToken');
+      const response = await fetch(`http://localhost:5000/api/tickets/${ticketId}/respond`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`
+        },
+        body: JSON.stringify({
+          message: responseText,
+          // Add role if needed by your API
+          role: 'admin' // or get this from user context
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to submit response');
+
+      const data = await response.json();
+
+      // Handle the API response properly
+      if (data.ticket) {
+        // Update the local state with the returned ticket
+        setTickets(tickets.map(t =>
+          t._id === ticketId ? { ...t, ...data.ticket } : t
+        ));
+      }
+
+      // Clear the response input
+      handleResponseChange(ticketId, '');
+      Alert.alert('Success', 'Response submitted successfully');
+    } catch (error) {
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to submit response');
+    }
+  };
+
   const filterTickets = () => {
     let result = [...tickets];
-    
+
     if (statusFilter !== 'all') {
       result = result.filter(ticket => ticket.status === statusFilter);
     }
-    
+
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(ticket => 
+      result = result.filter(ticket =>
         ticket.user.name.toLowerCase().includes(query) ||
         ticket.user.email.toLowerCase().includes(query) ||
         ticket.subject.toLowerCase().includes(query) ||
         ticket.message.toLowerCase().includes(query)
       );
     }
-    
+
     setFilteredTickets(result);
   };
 
   const resolveTicket = async (ticketId: string) => {
     try {
       const authToken = await AsyncStorage.getItem('authToken');
-      
+
       const response = await fetch(`http://localhost:5000/api/tickets/${ticketId}/resolve`, {
         method: 'PUT',
         headers: {
@@ -93,7 +141,7 @@ const AdminTicketsPage = () => {
       });
 
       if (!response.ok) throw new Error('Failed to resolve ticket');
-      
+
       Alert.alert('Success', 'Ticket has been marked as resolved');
       fetchTickets();
     } catch (error) {
@@ -104,7 +152,7 @@ const AdminTicketsPage = () => {
   const closeTicket = async (ticketId: string) => {
     try {
       const authToken = await AsyncStorage.getItem('authToken');
-      
+
       const response = await fetch(`http://localhost:5000/api/tickets/${ticketId}/close`, {
         method: 'PUT',
         headers: {
@@ -113,7 +161,7 @@ const AdminTicketsPage = () => {
       });
 
       if (!response.ok) throw new Error('Failed to close ticket');
-      
+
       Alert.alert('Success', 'Ticket has been closed');
       fetchTickets();
     } catch (error) {
@@ -136,77 +184,116 @@ const AdminTicketsPage = () => {
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
   };
 
-  const renderTicketItem = ({ item }: { item: Ticket }) => (
-    <TouchableOpacity 
-      style={styles.ticketCard}
-      onPress={() => router.push({
-        pathname: '/admin/tickets/[id]',
-        params: { 
-          id: item._id,
-          ticketData: JSON.stringify(item) 
-        }
-      })}
-    >
-      <View style={styles.ticketHeader}>
-        <Text style={styles.ticketSubject}>{item.subject}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
-        </View>
-      </View>
-      
-      <Text style={styles.ticketMessage} numberOfLines={2}>{item.message}</Text>
-      
-      <View style={styles.ticketFooter}>
-        <View style={styles.userInfo}>
-          <FontAwesome name="user" size={14} color="#6B7280" />
-          <Text style={styles.userText}>{item.user.name} ({item.user.email})</Text>
-        </View>
-        <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
-      </View>
-      
-      <View style={styles.actionButtons}>
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.respondButton]}
-          onPress={(e) => {
-            e.stopPropagation();
-            router.push({
-              pathname: '/admin/tickets/[id]/respond',
-              params: { id: item._id }
-            });
-          }}
+  const toggleExpandTicket = (ticketId: string) => {
+    setExpandedTicket(expandedTicket === ticketId ? null : ticketId);
+  };
+
+  const renderTicketItem = ({ item }: { item: Ticket }) => {
+    return (
+      <View style={styles.ticketCard}>
+        {/* Header with expand/collapse */}
+        <TouchableOpacity
+          onPress={() => toggleExpandTicket(item._id)}
+          activeOpacity={0.8}
         >
-          <Ionicons name="chatbubble-ellipses" size={16} color="white" />
-          <Text style={styles.actionButtonText}> Respond</Text>
+          <View style={styles.ticketHeader}>
+            <Text style={styles.ticketSubject}>{item.subject}</Text>
+            <View style={styles.headerRight}>
+              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+                <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+              </View>
+              <MaterialIcons
+                name={expandedTicket === item._id ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+                size={24}
+                color="#6B7280"
+              />
+            </View>
+          </View>
         </TouchableOpacity>
-        
-        {item.status !== 'resolved' && item.status !== 'closed' && (
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.resolveButton]}
-            onPress={(e) => {
-              e.stopPropagation();
-              resolveTicket(item._id);
-            }}
-          >
-            <Feather name="check-circle" size={16} color="white" />
-            <Text style={styles.actionButtonText}> Resolve</Text>
-          </TouchableOpacity>
+
+        {/* Ticket content */}
+        <View>
+          <Text style={styles.ticketMessage} numberOfLines={expandedTicket === item._id ? undefined : 2}>
+            {item.message}
+          </Text>
+
+          <View style={styles.ticketFooter}>
+            <View style={styles.userInfo}>
+              <FontAwesome name="user" size={14} color="#6B7280" />
+              <Text style={styles.userText}>{item.user.name} ({item.user.email})</Text>
+            </View>
+            <Text style={styles.dateText}>{formatDate(item.createdAt)}</Text>
+          </View>
+        </View>
+
+        {/* Expanded content */}
+        {expandedTicket === item._id && (
+          <View onStartShouldSetResponder={() => true}>
+            {item.responses?.length > 0 && (
+              <View style={styles.responsesContainer}>
+                <Text style={styles.responsesTitle}>Previous Responses:</Text>
+                {item.responses.map((response) => (
+                  <View
+                    key={response._id || response.createdAt}
+                    style={[
+                      styles.responseBubble,
+                      response.sender === user?._id ? styles.adminResponse : styles.userResponse
+                    ]}
+                  >
+                    <Text style={styles.responseUser}>
+                      {response.sender === user?._id ? 'You' : item.user.name}
+                    </Text>
+                    <Text style={styles.responseText}>{response.message}</Text>
+                    <Text style={styles.responseDate}>{formatDate(response.createdAt)}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            <View style={styles.responseInputContainer}>
+              <TextInput
+                style={styles.responseInput}
+                placeholder="Type your response here..."
+                placeholderTextColor="#9CA3AF"
+                value={responseTexts[item._id] || ''}
+                onChangeText={(text) => handleResponseChange(item._id, text)}
+                multiline
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={() => submitResponse(item._id)}
+              >
+                <MaterialIcons name="send" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
         )}
-        
-        {item.status !== 'closed' && (
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.closeButton]}
-            onPress={(e) => {
-              e.stopPropagation();
-              closeTicket(item._id);
-            }}
-          >
-            <MaterialIcons name="close" size={16} color="white" />
-            <Text style={styles.actionButtonText}> Close</Text>
-          </TouchableOpacity>
-        )}
+
+        {/* Action buttons */}
+        <View style={styles.actionButtons}>
+          {item.status !== 'resolved' && item.status !== 'closed' && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.resolveButton]}
+              onPress={() => resolveTicket(item._id)}
+            >
+              <Feather name="check-circle" size={16} color="white" />
+              <Text style={styles.actionButtonText}> Resolve</Text>
+            </TouchableOpacity>
+          )}
+
+          {item.status !== 'closed' && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.closeButton]}
+              onPress={() => closeTicket(item._id)}
+            >
+              <MaterialIcons name="close" size={16} color="white" />
+              <Text style={styles.actionButtonText}> Close</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-    </TouchableOpacity>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -233,41 +320,41 @@ const AdminTicketsPage = () => {
         <Text style={styles.title}>Support Tickets</Text>
         <Text style={styles.ticketCount}>{filteredTickets.length} tickets found</Text>
       </View>
-      
+
       <View style={styles.filterContainer}>
         <View style={styles.statusFilter}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.filterButton, statusFilter === 'all' && styles.activeFilter]}
             onPress={() => setStatusFilter('all')}
           >
             <Text style={[styles.filterText, statusFilter === 'all' && styles.activeFilterText]}>All</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.filterButton, statusFilter === 'open' && styles.activeFilter]}
             onPress={() => setStatusFilter('open')}
           >
             <Text style={[styles.filterText, statusFilter === 'open' && styles.activeFilterText]}>Open</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.filterButton, statusFilter === 'in-progress' && styles.activeFilter]}
             onPress={() => setStatusFilter('in-progress')}
           >
             <Text style={[styles.filterText, statusFilter === 'in-progress' && styles.activeFilterText]}>In Progress</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.filterButton, statusFilter === 'resolved' && styles.activeFilter]}
             onPress={() => setStatusFilter('resolved')}
           >
             <Text style={[styles.filterText, statusFilter === 'resolved' && styles.activeFilterText]}>Resolved</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.filterButton, statusFilter === 'closed' && styles.activeFilter]}
             onPress={() => setStatusFilter('closed')}
           >
             <Text style={[styles.filterText, statusFilter === 'closed' && styles.activeFilterText]}>Closed</Text>
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.searchContainer}>
           <MaterialIcons name="search" size={20} color="#9CA3AF" />
           <TextInput
@@ -279,7 +366,7 @@ const AdminTicketsPage = () => {
           />
         </View>
       </View>
-      
+
       <FlatList
         data={filteredTickets}
         renderItem={renderTicketItem}
@@ -291,6 +378,7 @@ const AdminTicketsPage = () => {
             <Text style={styles.emptyText}>No tickets found</Text>
           </View>
         }
+        extraData={expandedTicket} // Add this to ensure re-renders when expandedTicket changes
       />
     </View>
   );
@@ -460,6 +548,69 @@ const styles = StyleSheet.create({
   retryText: {
     color: '#3B82F6',
     textDecorationLine: 'underline',
+  },
+  responsesContainer: {
+    marginTop: 12,
+    marginBottom: 12,
+  },
+  responsesTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4B5563',
+    marginBottom: 8,
+  },
+  responseBubble: {
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
+  },
+  adminResponse: {
+    backgroundColor: '#EFF6FF',
+    alignSelf: 'flex-end',
+  },
+  userResponse: {
+    backgroundColor: '#F3F4F6',
+    alignSelf: 'flex-start',
+  },
+  responseUser: {
+    fontWeight: '600',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  responseText: {
+    fontSize: 14,
+  },
+  responseDate: {
+    fontSize: 10,
+    color: '#6B7280',
+    textAlign: 'right',
+    marginTop: 4,
+  },
+  responseInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  responseInput: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    padding: 12,
+    minHeight: 50,
+    textAlignVertical: 'top',
+  },
+  sendButton: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 8,
+    padding: 12,
+    marginLeft: 8,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
 });
 

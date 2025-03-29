@@ -3,20 +3,55 @@ import { Link } from 'expo-router';
 import ProductCard from '../../../components/ProductCard';
 import Header from '../../../components/Header';
 import Footer from '../../../components/Footer';
-import axios from 'axios';
 import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Product {
   _id: string;
   name: string;
   price: number;
-  description: string;
+  description?: string;
   averageRating: number;
   images: string[];
-  createdAt: string;
-  updatedAt: string;
-  stock: number;  
+  stock: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+const colors = {
+  primary: '#373D20',
+  secondary: '#717744',
+  accent: '#BCBD8B',
+  background: '#F5F5F5',
+  text: '#766153',
+  error: '#FF0000',
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    paddingHorizontal: 15,
+    backgroundColor: colors.background,
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  flatListContent: {
+    paddingBottom: 20,
+  },
+  productWrapper: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  errorText: {
+    color: colors.error,
+    fontSize: 16,
+  },
+});
 
 const API_URL = 'http://localhost:5000/api/products/get-all-products';
 
@@ -29,23 +64,36 @@ export default function HomeScreen() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const response = await axios.get<Product[]>(API_URL, {
+        const authToken = await AsyncStorage.getItem('authToken');
+        const response = await fetch(API_URL, {
           headers: {
-            'Cache-Control': 'no-cache', // Disable caching
-            'Pragma': 'no-cache',
-            'Expires': '0',
+            'Authorization': `Bearer ${authToken}`,
+            'Cache-Control': 'no-cache',
           },
         });
-        const cleanedProducts = response.data.map((product) => ({
+
+        if (!response.ok) {
+          throw new Error(`Failed to load products: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        // The API returns the products array directly
+        if (!Array.isArray(data)) {
+          throw new Error('Expected an array of products');
+        }
+
+        // Clean image URLs if needed (your images look fine already)
+        const cleanedProducts = data.map((product: Product) => ({
           ...product,
-          images: product.images
-            ?.map((image) => image.replace(/"|<.*?>/g, ''))
-            .filter(Boolean) || [],
+          images: product.images || [] // Ensure images is always an array
         }));
+
         setProducts(cleanedProducts);
       } catch (error) {
-        setError('Failed to load products');
-        console.error(error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load products';
+        setError(errorMessage);
+        console.error('Fetch Error:', error);
       } finally {
         setLoading(false);
       }
@@ -76,6 +124,18 @@ export default function HomeScreen() {
     );
   }
 
+  if (products.length === 0 && !loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header />
+        <View style={styles.centered}>
+          <Text>No products available</Text>
+        </View>
+        <Footer />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Header />
@@ -97,37 +157,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const colors = {
-  primary: '#373D20',
-  secondary: '#717744',
-  accent: '#BCBD8B',
-  background: '#F5F5F5',
-  text: '#766153',
-  error: '#FF0000',
-};
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 15,
-    backgroundColor: colors.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  flatListContent: {
-    paddingBottom: 20,
-  },
-  productWrapper: {
-    backgroundColor: colors.background,
-    borderRadius: 12,
-    padding: 12,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: 16,
-  },
-});
