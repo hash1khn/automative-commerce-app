@@ -59,11 +59,11 @@ export default function ProfileScreen() {
         const response = await fetch('http://localhost:5000/api/users/me', {
           headers: { Authorization: `Bearer ${authToken}` },
         });
-        
+
         if (!response.ok) throw new Error('Failed to fetch profile');
-        
+
         const data = await response.json();
-        
+
         setProfileData({
           user: {
             name: data.name || data.user?.name || '',
@@ -89,64 +89,87 @@ export default function ProfileScreen() {
   }, []);
 
   if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} />;
+    return (
+      <View style={styles.loadingContainer}>
+        <Header />
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Footer />
+      </View>
+    );
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.profileHeader}>
-        <Image
-          source={require('../../../assets/images/placeholder.jpg')}
-          style={styles.profileImage}
-        />
-        <Text style={styles.userName}>{profileData?.user?.name || 'Guest'}</Text>
-        <Text style={styles.userEmail}>{profileData?.user?.email || 'No email'}</Text>
-        <Text style={styles.userPhone}>{profileData?.user?.phone || 'No phone'}</Text>
-      </View>
-      <View style={styles.statusContainer}>
-        <StatusButton
-          title="To Ship"
-          count={profileData.orderStatusCounts.processing}
-          icon={<FontAwesome name="truck" size={24} color={colors.primary} />}
-          onPress={() => router.push(`/orders?status=processing`)}
-        />
-        <StatusButton
-          title="To Receive"
-          count={profileData.orderStatusCounts.shipped}
-          icon={<MaterialIcons name="local-shipping" size={24} color={colors.primary} />}
-          onPress={() => router.push(`/orders?status=shipped`)}
-        />
-        <StatusButton
-          title="To Review"
-          count={profileData.orderStatusCounts.delivered}
-          icon={<Feather name="package" size={24} color={colors.primary} />}
-          onPress={() => router.push(`/orders?status=delivered`)}
-        />
-        <StatusButton
-          title="Returns & Cancellations"
-          count={profileData.orderStatusCounts.cancelled}
-          icon={<AntDesign name="closecircleo" size={24} color={colors.primary} />}
-          onPress={() => router.push(`/orders?status=cancelled`)}
-        />
-      </View>
-      <View style={styles.supportSection}>
-        <TouchableOpacity
-          style={styles.supportButton}
-          onPress={() => router.push('/tickets/new-ticket')}
-        >
-          <MaterialIcons name="support-agent" size={24} color="white" />
-          <Text style={styles.supportButtonText}>Create Support Ticket</Text>
-        </TouchableOpacity>
-      </View>
-      <Footer></Footer>
-    </ScrollView>
+    <View style={styles.mainContainer}>
+      <Header />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.contentContainer}>
+          <View style={styles.profileHeader}>
+            <Image
+              source={require('../../../assets/images/placeholder.jpg')}
+              style={styles.profileImage}
+            />
+            <Text style={styles.userName}>{profileData?.user?.name || 'Guest'}</Text>
+            <Text style={styles.userEmail}>{profileData?.user?.email || 'No email'}</Text>
+            <Text style={styles.userPhone}>{profileData?.user?.phone || 'No phone'}</Text>
+          </View>
+          <View style={styles.statusContainer}>
+            <StatusButton
+              title="To Ship"
+              count={profileData.orderStatusCounts.processing}
+              icon={<FontAwesome name="truck" size={24} color={colors.primary} />}
+              onPress={() => router.push(`/orders?status=processing`)}
+            />
+            <StatusButton
+              title="To Receive"
+              count={profileData.orderStatusCounts.shipped}
+              icon={<MaterialIcons name="local-shipping" size={24} color={colors.primary} />}
+              onPress={() => router.push(`/orders?status=shipped`)}
+            />
+            <StatusButton
+              title="To Review"
+              count={profileData.orderStatusCounts.delivered}
+              icon={<Feather name="package" size={24} color={colors.primary} />}
+              onPress={() => router.push(`/orders?status=delivered`)}
+            />
+            <StatusButton
+              title="Returns & Cancellations"
+              count={profileData.orderStatusCounts.cancelled}
+              icon={<AntDesign name="closecircleo" size={24} color={colors.primary} />}
+              onPress={() => router.push(`/orders?status=cancelled`)}
+            />
+          </View>
+          <View style={styles.supportSection}>
+            <TouchableOpacity
+              style={styles.supportButton}
+              onPress={() => router.push('/tickets/my-tickets')}
+            >
+              <MaterialIcons name="support-agent" size={24} color="white" />
+              <Text style={styles.supportButtonText}>My Support Tickets</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+      <Footer />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
+  mainContainer: {
+    flex: 1,
     backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'space-between',
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  contentContainer: {
+    padding: 20,
+    paddingBottom: 30, // Extra padding to account for footer
   },
   profileHeader: {
     alignItems: 'center',
