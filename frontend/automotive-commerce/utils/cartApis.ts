@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://automative-commerce-app-production.up.railway.app/api',
+  baseURL: 'http://localhost:5000/api',
 });
 
 export const cartApi = {

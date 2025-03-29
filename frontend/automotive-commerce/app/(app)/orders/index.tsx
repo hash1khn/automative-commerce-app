@@ -93,7 +93,7 @@ export const OrderTabs = () => {
   const fetchUserOrders = async () => {
     console.log('Fetching user orders...');
     try {
-      const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/orders/get-user-orders', {
+      const response = await fetch('http://localhost:5000/api/orders/get-user-orders', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

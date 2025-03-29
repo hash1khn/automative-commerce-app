@@ -18,7 +18,7 @@ interface Product {
   stock: number;  
 }
 
-const API_URL = 'https://automative-commerce-app-production.up.railway.app/api/products/get-all-products';
+const API_URL = 'http://localhost:5000/api/products/get-all-products';
 
 export default function HomeScreen() {
   const [products, setProducts] = useState<Product[]>([]);

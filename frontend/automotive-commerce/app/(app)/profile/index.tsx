@@ -56,7 +56,7 @@ export default function ProfileScreen() {
       setLoading(true);
       try {
         const authToken = await AsyncStorage.getItem('authToken');
-        const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/users/me', {
+        const response = await fetch('http://localhost:5000/api/users/me', {
           headers: { Authorization: `Bearer ${authToken}` },
         });
         

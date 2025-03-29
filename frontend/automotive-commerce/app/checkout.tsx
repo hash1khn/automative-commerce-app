@@ -106,7 +106,7 @@ const CheckoutSection = ({ onProceed, setDiscount, setTotal }: CheckoutSectionPr
 
     try {
       setVerifying(true);
-      const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/orders/validate-promo', {
+      const response = await fetch('http://localhost:5000/api/orders/validate-promo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -286,7 +286,7 @@ const PaymentSection = ({ shippingAddress, total, cartItems }: PaymentSectionPro
       // Prepare order data
       const orderData = { /* ... */ };
 
-      const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/orders/payment', {
+      const response = await fetch('http://localhost:5000/api/orders/payment', {
         method: 'POST',
         headers: { /* ... */ },
         body: JSON.stringify(orderData)
@@ -324,7 +324,7 @@ const PaymentSection = ({ shippingAddress, total, cartItems }: PaymentSectionPro
       }
 
       // Handle cart clearing
-      const clearCartResponse = await fetch('https://automative-commerce-app-production.up.railway.app/api/cart/clear', {
+      const clearCartResponse = await fetch('http://localhost:5000/api/cart/clear', {
         method: 'DELETE',
         headers: { /* ... */ }
       });

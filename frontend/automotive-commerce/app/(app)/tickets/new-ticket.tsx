@@ -17,7 +17,7 @@ const NewTicketScreen = () => {
       setIsSubmitting(true);
       const authToken = await AsyncStorage.getItem('authToken');
       
-      const response = await fetch('https://automative-commerce-app-production.up.railway.app/api/tickets/create-ticket', {
+      const response = await fetch('http://localhost:5000/api/tickets/create-ticket', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

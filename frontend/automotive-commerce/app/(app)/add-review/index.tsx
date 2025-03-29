@@ -21,7 +21,7 @@ const AddReviewScreen = () => {
       const productIdString = Array.isArray(productId) ? productId[0] : productId;
       const orderIdString = Array.isArray(orderId) ? orderId[0] : orderId;
       
-      const response = await fetch(`https://automative-commerce-app-production.up.railway.app/api/products/${productIdString}/reviews`, {
+      const response = await fetch(`http://localhost:5000/api/products/${productIdString}/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
