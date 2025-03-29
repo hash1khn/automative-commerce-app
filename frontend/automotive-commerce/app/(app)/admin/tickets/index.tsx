@@ -600,6 +600,7 @@ const styles = StyleSheet.create({
     padding: 12,
     minHeight: 50,
     textAlignVertical: 'top',
+    marginBottom: 8,
   },
   sendButton: {
     backgroundColor: '#3B82F6',
