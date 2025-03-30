@@ -11,7 +11,8 @@ import {
   Alert,
   Modal,
   ScrollView,
-  ActivityIndicator
+  ActivityIndicator,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../../../context/AuthContext';
@@ -131,54 +132,69 @@ const AdminProductsPage = () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
+        allowsMultipleSelection: false, // change if your backend supports multiple
         quality: 1,
+        base64: false, // important: we want file URIs, not base64
       });
-
-      if (!result.canceled) {
+  
+      if (!result.canceled && result.assets.length > 0) {
         setUploading(true);
-        interface Asset {
-            uri: string;
+  
+        const token = await AsyncStorage.getItem('authToken');
+        const asset = result.assets[0];
+  
+        let fileToUpload: any;
+  
+        if (Platform.OS === 'web') {
+          // ✅ Convert base64 URI to Blob for web
+          const blob = await (await fetch(asset.uri)).blob();
+  
+          fileToUpload = new File(
+            [blob],
+            asset.fileName || 'upload.jpg',
+            { type: asset.mimeType || 'image/jpeg' }
+          );
+        } else {
+          // ✅ Native platform (iOS/Android)
+          fileToUpload = {
+            uri: asset.uri,
+            name: asset.fileName || 'upload.jpg',
+            type: asset.mimeType || 'image/jpeg',
+          };
         }
-
-        interface UploadResult {
-            url: string;
-        }
-
-        const uploadedImages: string[] = await Promise.all(
-            result.assets.map(async (asset: Asset): Promise<string> => {
-                const formData = new FormData();
-                formData.append('file', {
-                    uri: asset.uri,
-                    type: 'image/jpeg',
-                    name: 'image.jpg',
-                } as any);
-
-                const uploadResponse = await fetch('http://localhost:5000/api/upload', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                    body: formData,
-                });
-
-                const data: UploadResult = await uploadResponse.json();
-                return data.url;
-            })
-        );
-
-        setFormData({
-          ...formData,
-          images: [...formData.images, ...uploadedImages],
+  
+        const formData = new FormData();
+        formData.append('file', fileToUpload);
+  
+        const response = await fetch('http://localhost:5000/api/products/upload', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
         });
+  
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText);
+        }
+  
+        const data = await response.json();
+        console.log('✅ Upload success:', data.url);
+  
+        setFormData((prev) => ({
+          ...prev,
+          images: [...prev.images, data.url],
+        }));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Image upload error:', error);
-      Alert.alert('Error', 'Failed to upload images');
+      Alert.alert('Upload Failed', error.message);
     } finally {
       setUploading(false);
     }
   };
+  
 
   const removeImage = (index: number) => {
     const newImages = [...formData.images];

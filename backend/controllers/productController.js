@@ -6,38 +6,43 @@ const Product = require('../models/Product');
  * @access  Private (Admin)
  */
 exports.createProduct = async (req, res) => {
-    try {
-      console.log('Received Body:', req.body);
-      console.log('Received Files:', req.files);
-  
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ message: 'Images are required. Please upload at least one image.' });
-      }
-  
-      const { name, price, description,stock } = req.body;
-  
-      if (!name || !price || !description) {
-        return res.status(400).json({ message: 'All fields (name, price, description) are required.' });
-      }
-  
-      // Extract image URLs from Cloudinary response
-      const imageUrls = req.files.map(file => file.path);
-  
-      const product = new Product({
-        name,
-        price,
-        description,
-        images: imageUrls,
-        stock,
-      });
-  
-      await product.save();
-      return res.status(201).json({ message: 'Product created successfully', product });
-    } catch (error) {
-      console.error('Create Product Error:', error);
-      return res.status(500).json({ message: 'Internal server error.', error: error.message || error });
+  try {
+    const { name, price, description, stock, images } = req.body;
+    
+    if (!name || !price || !description || !images || images.length === 0) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
-  };
+    
+    const product = new Product({
+      name,
+      price,
+      description,
+      images, // These are just the URLs now
+      stock,
+    });
+    
+    await product.save();
+    return res.status(201).json({ message: 'Product created successfully', product });
+  } catch (error) {
+    console.error('Create Product Error:', error);
+    return res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+// In your controller file
+exports.handleImageUpload = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded' });
+    }
+    
+    // Return the URL of the uploaded file
+    // If you're using Cloudinary, this might be req.file.path
+    return res.status(200).json({ url: req.file.path });
+  } catch (error) {
+    console.error('Image upload error:', error);
+    return res.status(500).json({ message: 'Failed to upload image', error: error.message });
+  }
+};
   
 
 /**
